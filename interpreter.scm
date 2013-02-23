@@ -17,9 +17,30 @@
       ((eq? 'var (car statement)) (pret_declare stmnt env))
       ((eq? 'if (car statement)) (pret_if stmnt env))
       ((eq? 'return (car statement)) (pret_return stmnt env))
-      ((operator? (car statement)) (pret_op stmnt env))
       (else (error "invalid operator")))))
-      
+     
+(define value
+  (lambda (expr env)
+    (cond
+      ((number? expr) expr)
+      ((not (pair? expr)) (lookup expr env))
+      ((null? (cdr expr)) (value (car expr)))
+     ; ((eq? '= (car expr)) 
+      (else ((getOp (car expr)) (value (cadr expr)) (value (caddr expr)))))))
+  
+(define getOp
+  (lambda (op)
+    (cond
+      ((eq? '+ op) +)
+      ((eq? '- op) -)
+      ((eq? '* op) *)
+      ((eq? '/ op) quotient)
+      ((eq? '% op) remainder)
+      ((eq? '|| op) or)
+      ((eq? '&& op) and)
+      ((eq? '! op) not)
+      (else (error "error in getOp, operator not found")))))
+
 (define operator?
   (lambda (op)
     (cond
