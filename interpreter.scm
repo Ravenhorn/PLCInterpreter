@@ -48,3 +48,15 @@
     (cond
       ((or (number? val) (boolean? val)) (cons (cons var (cons val '())) env))
       (else (error "invalid type, variables must be an integer or boolean")))))
+
+(define pret_declare
+  (lambda (stmnt env)
+    (cond
+      ((null? stmnt) (error "null arg passed to declare"))
+      ((null? (cdr stmnt)) (bind (car stmnt) '() env))
+      ((list? (cdr stmnt))
+        (cond
+          ((operator? (cadr stmnt))(pret_declare (cons (car stmnt) (cons (car (value (cdr stmnt) env)) '())) (cdr (value (cdr stmnt) env))))
+          (else (pret_assign (cons (car stmnt) (cons (car (interpret-stmnt (cdr stmnt) env)) '())) (cdr (interpret-stmnt (cdr stmnt) env))))))
+      (else (cons (car stmnt) (cons (cdr stmnt) '()))))))
+      
