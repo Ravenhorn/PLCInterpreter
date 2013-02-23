@@ -19,6 +19,22 @@
       ((eq? 'return (car statement)) (pret_return stmnt env))
       (else (error "invalid operator")))))
      
+(define pret_if
+  (lambda (stmnt env)
+    ()))
+
+(define getBool
+  (lambda (op)
+    (cond
+      ((eq? '>) >)
+      ((eq? '==) =)
+      ((eq? '<) <)
+      ((eq? '!=) (lambda (n1 n2) (not (= n1 n2))))
+      ((eq? '<=) <=)
+      ((eq? '>=) >=)
+      (else (error "invalid bool operator")))))
+
+;TODO sideeffects
 (define value
   (lambda (expr env)
     (cond
@@ -67,5 +83,6 @@
 (define bind
   (lambda (var val env)
     (cond
+      ((null?
       ((or (number? val) (boolean? val)) (cons (cons var (cons val '())) env))
       (else (error "invalid type, variables must be an integer or boolean")))))
