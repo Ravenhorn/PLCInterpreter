@@ -63,7 +63,7 @@
       ((or (number? expr) (boolean? expr)) (cons expr (cons env '())))
       ((not (pair? expr)) (cons (lookup expr env) (cons env '())))
       ((null? (cdr expr)) (value (car expr) env))
-     ; ((eq? '= (car expr)) 
+      ((eq? '= (car expr)) (pret_assign (expr env)))
       (else (cons ((getOp (car expr)) (car (value (cadr expr) env)) (car (value (caddr expr) (cadr (value (cadr expr) env))))) 
                   (cons (cadr (value (caddr expr) (cadr (value (cadr expr) env)))) '()))))))
 
@@ -126,17 +126,28 @@
       ((eq? (caar env var)) #t)
       (else (declared? var (cdr env))))))
 
+;(define pret_declare
+;  (lambda (stmnt env)
+;    (cond
+;      ((null? stmnt) (error "null arg passed to declare"))
+;      ((null? (cdr stmnt)) (bind (car stmnt) '() env))
+;      ((list? (cdr stmnt))
+;        (cond
+;          ((operator? (cadr stmnt)) (pret_declare (cons (car stmnt) (cons (car (value (cdr stmnt) env)) '())) (cdr (value (cdr stmnt) env))))
+;          ((eq? ))
+;          (else (pret_assign (cons (car stmnt) (cons (car (interpret-stmnt (cdr stmnt) env)) '())) (cdr (interpret-stmnt (cdr stmnt) env))))))
+;      (else (bind (car stmnt) (cdr stmnt) env)))))
+
 (define pret_declare
   (lambda (stmnt env)
     (cond
       ((null? stmnt) (error "null arg passed to declare"))
-      ((null? (cdr stmnt)) (bind (car stmnt) '() env))
-      ((list? (cdr stmnt))
-        (cond
-          ((operator? (cadr stmnt))(pret_declare (cons (car stmnt) (cons (car (value (cdr stmnt) env)) '())) (cdr (value (cdr stmnt) env))))
-          ((eq? 
-          (else (pret_assign (cons (car stmnt) (cons (car (interpret-stmnt (cdr stmnt) env)) '())) (cdr (interpret-stmnt (cdr stmnt) env))))))
-      (else (bind (car stmnt) (cdr stmnt) env)))
+      ((null? (cddr stmnt)) (bind (cadr stmnt) '() env))
+      ((not (list? (cddr stmnt))) ;if the last element is not a list
+       (cond ;make sure it's something we like
+         ((or (number? (cddr stmnt)) (or (eq? "true" (cddr stmnt)) (eq? "false" (cddr stmnt)))) (bind (cadr stmnt) (cddr stmnt) env))
+         (else (error "unrecognized rhs"))))
+      (else (bind (cadr stmnt) (car (value (cddr stmnt))) (cadr (value (cddr stmnt))))))))
 
 (define pret_assign
   (lambda(stmnt env)
@@ -145,7 +156,11 @@
       ((null? (cdr stmnt)) (error "no value to assign"))
       ((declared? (cadr stmnt) env)
         (cond
-          ((or (number? (cddr stmnt)) (or (eq? (cddr stmnt) "true") (eq? (cddr stmnt) "false"))) (bind (cadr stmnt) (cddr stmnt) (unbind (cadr stmnt) env)))
-          ((declared? (cddr stmnt)) (bind (cadr stmnt) (lookup (cddr stmnt)) (unbind (cadr stmnt) env)))
+          ((list? cddr stmnt)
+           (cond
+             ((or (operator? (caddr stmnt)) (eq? '= (caddr stmnt))) (cons (value cddr stmnt) (cons (bind (cadr stmnt) (value (cddr stmnt)) (unbind (cadr stmnt) env)) '())))
+             (else (error "unrecognized rhs"))))
+          ((or (number? (cddr stmnt)) (or (eq? (cddr stmnt) "true") (eq? (cddr stmnt) "false"))) (cons (cddr stmnt) (cons (bind (cadr stmnt) (cddr stmnt) (unbind (cadr stmnt) env)) '())))
+          ((declared? (cddr stmnt)) (cons (lookup (cddr stmnt)) (cons (bind (cadr stmnt) (lookup (cddr stmnt)) (unbind (cadr stmnt) env)) '())))
           (else (error "unrecognized rhs"))))
-      (else (error "unrecognized lhs"))
+      (else (error "unrecognized lhs")))))
