@@ -10,10 +10,10 @@
       ((null? ptree) env)
       (else (interpret_sl (cdr ptree) (interpret_stmnt (car ptree) env))))))
 
-(define interpret-stmnt
+(define interpret_stmnt
   (lambda (stmnt env)
     (cond
-      ((eq? '= (car statement)) (pret_assign stmnt env))
+      ((eq? '= (car statement)) (cadr (pret_assign stmnt env)))
       ((eq? 'var (car statement)) (pret_declare stmnt env))
       ((eq? 'if (car statement)) (pret_if stmnt env))
       ((eq? 'return (car statement)) (pret_return stmnt env))
@@ -126,18 +126,6 @@
       ((eq? (caar env var)) #t)
       (else (declared? var (cdr env))))))
 
-;(define pret_declare
-;  (lambda (stmnt env)
-;    (cond
-;      ((null? stmnt) (error "null arg passed to declare"))
-;      ((null? (cdr stmnt)) (bind (car stmnt) '() env))
-;      ((list? (cdr stmnt))
-;        (cond
-;          ((operator? (cadr stmnt)) (pret_declare (cons (car stmnt) (cons (car (value (cdr stmnt) env)) '())) (cdr (value (cdr stmnt) env))))
-;          ((eq? ))
-;          (else (pret_assign (cons (car stmnt) (cons (car (interpret-stmnt (cdr stmnt) env)) '())) (cdr (interpret-stmnt (cdr stmnt) env))))))
-;      (else (bind (car stmnt) (cdr stmnt) env)))))
-
 (define pret_declare
   (lambda (stmnt env)
     (cond
@@ -154,9 +142,9 @@
     (cond
       ((null? stmnt) (error "null arg passed to assign"))
       ((null? (cdr stmnt)) (error "no value to assign"))
-      ((declared? (cadr stmnt) env)
+      ((declared? (cadr stmnt) env) ;if it exists already
         (cond
-          ((list? cddr stmnt)
+          ((list? cddr stmnt) ;if the right hand side is a list
            (cond
              ((or (operator? (caddr stmnt)) (eq? '= (caddr stmnt))) (cons (value cddr stmnt) (cons (bind (cadr stmnt) (value (cddr stmnt)) (unbind (cadr stmnt) env)) '())))
              (else (error "unrecognized rhs"))))
