@@ -110,14 +110,6 @@
       ((or (number? val) (boolean? val)) (cons (cons var (cons val '())) env))
       (else (error "invalid type, variables must be an integer or boolean")))))
 
-(define unbind
-  (lambda (var env)
-    (cond
-      ((null? env) '())
-      ((null? var) (error "null var"))
-      ((eq? (caar env) var) (unbind var (cdr env)))
-      (else (cons (car env) (unbind var (cdr env)))))))
-
 (define declared?
   (lambda (var env)
     (cond
