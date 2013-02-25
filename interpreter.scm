@@ -31,12 +31,13 @@
     (cond
       ((null? (cdddr stmnt)) ;no else
        (cond
-         ((car (eval_if (cadr stmnt) env)) (interpret_sl (cddr stmnt) (cadr (eval_if (cadr stmnt) env))))
+         ((car (eval_if (cadr stmnt) env)) (interpret_sl (cons (caddr stmnt) '()) (cadr (eval_if (cadr stmnt) env))))
          (else (cadr (eval_if (cadr stmnt) env)))))
       (else ;has an else
        (cond
-         ((car (eval_if (cadr stmnt) env)) (interpret_sl (cddr stmnt) (cadr (eval_if (cadr stmnt) env))))
-         (else (interpret_sl (cdddr stmnt) (cadr (eval_if (cadr stmnt) env)))))))))
+         ((car (eval_if (cadr stmnt) env)) (interpret_sl (cons (caddr stmnt) '()) (cadr (eval_if (cadr stmnt) env))))
+        ; ((car (eval_if (cadr stmnt) env)) (error stmnt))
+         (else (interpret_sl (cons (cdddr stmnt) '()) (cadr (eval_if (cadr stmnt) env)))))))))
 
 (define eval_if
   (lambda (if env)
