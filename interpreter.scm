@@ -26,11 +26,11 @@
 (define pret_if
   (lambda (stmnt env)
     (cond
-      ((null? (cdddr stmnt))
+      ((null? (cdddr stmnt)) ;no else
        (cond
          ((car (eval_if (cadr stmnt) env)) (interpret_sl (caddr stmnt) (cadr (eval_if (cadr stmnt) env))))
-         (else env)))
-      (else
+         (else (cadr (eval_if (cadr stmnt) env)))))
+      (else ;has an else
        (cond
          ((car (eval_if (cadr stmnt) env)) (interpret_sl (caddr stmnt) (cadr (eval_if? (cadr stmnt) env))))
          (else (interpret_sl (caddr stmnt) (cadr (eval_if? (cadr stmnt) env)))))))))
@@ -152,3 +152,4 @@
           ((declared? (caddr stmnt) env) (cons (lookup (cddr stmnt)) (cons (bind (cadr stmnt) (lookup (cddr stmnt)) (unbind (cadr stmnt) env)) '())))
           (else (error "unrecognized rhs"))))
       (else (error "unrecognized lhs")))))
+
