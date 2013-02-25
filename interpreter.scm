@@ -1,3 +1,7 @@
+;KALAA Interpreter
+;Stuart Long and Jason Kuster
+;EECS 345 Interpreter 1
+
 (load "verySimpleParser.scm")
 
 (define interpret
@@ -23,6 +27,22 @@
 (define pret_return
   (lambda (stmnt env)
     (bind 'return (car (value (cadr stmnt) env)) (cadr (value (cadr stmnt) env)))))
+
+(define pret_declare
+  (lambda (stmnt env)
+    (cond
+      ((null? stmnt) (error "null arg passed to declare"))
+      ((null? (cddr stmnt)) (bind (cadr stmnt) '() env))
+      (else (bind (cadr stmnt) (car (value (cddr stmnt) env)) (cadr (value (caddr stmnt) env)))))))
+
+(define pret_assign
+  (lambda(stmnt env)
+    (cond
+      ((null? stmnt) (error "null arg passed to assign"))
+      ((null? (cddr stmnt)) (error "no value to assign"))
+      ((declared? (cadr stmnt) env) (cons (car (value (caddr stmnt) env)) (cons (bind (cadr stmnt) (car (value (caddr stmnt) env)) (cadr (value (caddr stmnt) env))) '())))
+      (else (error "unrecognized lhs")))))
+
      
 (define pret_if
   (lambda (stmnt env)
@@ -117,18 +137,3 @@
       ((null? var) (error "null var"))
       ((eq? (caar env) var) #t)
       (else (declared? var (cdr env))))))
-
-(define pret_declare
-  (lambda (stmnt env)
-    (cond
-      ((null? stmnt) (error "null arg passed to declare"))
-      ((null? (cddr stmnt)) (bind (cadr stmnt) '() env))
-      (else (bind (cadr stmnt) (car (value (cddr stmnt) env)) (cadr (value (caddr stmnt) env)))))))
-
-(define pret_assign
-  (lambda(stmnt env)
-    (cond
-      ((null? stmnt) (error "null arg passed to assign"))
-      ((null? (cddr stmnt)) (error "no value to assign"))
-      ((declared? (cadr stmnt) env) (cons (car (value (caddr stmnt) env)) (cons (bind (cadr stmnt) (car (value (caddr stmnt) env)) (cadr (value (caddr stmnt) env))) '())))
-      (else (error "unrecognized lhs")))))
