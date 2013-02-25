@@ -112,7 +112,8 @@
     (cond
       ((null? val) (cons (cons var '()) env))
       ((or (number? val) (boolean? val)) (cons (cons var (cons val '())) env))
-      (else (error "invalid type, variables must be an integer or boolean")))))
+      ;(else (error "invalid type, variables must be an integer or boolean")))))
+(else (error val)))))
 
 (define unbind
   (lambda (var env)
@@ -146,14 +147,6 @@
     (cond
       ((null? stmnt) (error "null arg passed to assign"))
       ((null? (cddr stmnt)) (error "no value to assign"))
-      ((declared? (cadr stmnt) env) ;if it exists already
-        (cond
-          ((not (null? (cdddr stmnt))) ; if the right side is a list
-           (cond
-             ((or (operator? (caddr stmnt)) (eq? '= (caddr stmnt))) (cons (value cddr stmnt) (cons (bind (cadr stmnt) (value (cddr stmnt)) (unbind (cadr stmnt) env)) '())))
-             (else (error "unrecognized rhs"))))
-          ((or (number? (caddr stmnt)) (or (eq? (cddr stmnt) "true") (eq? (cddr stmnt) "false"))) (cons (caddr stmnt) (cons (bind (cadr stmnt) (caddr stmnt) (unbind (cadr stmnt) env)) '())))
-          ((declared? (caddr stmnt) env) (cons (lookup (cddr stmnt)) (cons (bind (cadr stmnt) (lookup (cddr stmnt)) (unbind (cadr stmnt) env)) '())))
-          (else (error stmnt))))
+      ((declared? (cadr stmnt) env) (cons (car (value (caddr stmnt) env)) (cons (bind (cadr stmnt) (car (value (caddr stmnt) env)) (cadr (value (caddr stmnt) env))) '())))
       (else (error "unrecognized lhs")))))
 
