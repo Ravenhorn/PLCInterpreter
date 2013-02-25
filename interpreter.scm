@@ -131,10 +131,10 @@
     (cond
       ((null? stmnt) (error "null arg passed to declare"))
       ((null? (cddr stmnt)) (bind (cadr stmnt) '() env))
-      ;((not (list? (cddr stmnt))) ;if the last element is not a list
-       ;(cond ;make sure it's something we like
-         ;((or (number? (cddr stmnt)) (or (eq? "true" (cddr stmnt)) (eq? "false" (cddr stmnt)))) (bind (cadr stmnt) (cddr stmnt) env))
-         ;(else (error "unrecognized rhs"))))
+      ((not (list? (cddr stmnt))) ;if the last element is not a list
+       (cond ;make sure it's something we like
+         ((or (number? (cddr stmnt)) (or (eq? "true" (cddr stmnt)) (eq? "false" (cddr stmnt)))) (bind (cadr stmnt) (cddr stmnt) env))
+         (else (error "unrecognized rhs"))))
       (else (bind (cadr stmnt) (car (value (cddr stmnt) env)) (cadr (value (cddr stmnt) env)))))))
 
 (define pret_assign
