@@ -56,7 +56,6 @@
       ((eq? '! op) not)
       (else (error "invalid bool operator")))))
 
-;TODO sideeffects
 (define value
   (lambda (expr env)
     (cond
