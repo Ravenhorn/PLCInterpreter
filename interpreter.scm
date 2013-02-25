@@ -135,7 +135,7 @@
        (cond ;make sure it's something we like
          ((or (number? (cddr stmnt)) (or (eq? "true" (cddr stmnt)) (eq? "false" (cddr stmnt)))) (bind (cadr stmnt) (cddr stmnt) env))
          (else (error "unrecognized rhs"))))
-      (else (bind (cadr stmnt) (car (value (cddr stmnt))) (cadr (value (cddr stmnt))))))))
+      (else (bind (cadr stmnt) (car (value (cddr stmnt) env)) (cadr (value (cddr stmnt) env)))))))
 
 (define pret_assign
   (lambda(stmnt env)
