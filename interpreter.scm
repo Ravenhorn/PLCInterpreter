@@ -13,15 +13,12 @@
 (define interpret_stmnt
   (lambda (stmnt env)
     (cond
-      ;((null? stmnt) env)
-      ;((not (pair? stmnt)) env)
       ((pair? (car stmnt)) (interpret_stmnt (car stmnt) env))
       ((eq? '= (car stmnt)) (cadr (pret_assign stmnt env)))
       ((eq? 'var (car stmnt)) (pret_declare stmnt env))
       ((eq? 'if (car stmnt)) (pret_if stmnt env))
       ((eq? 'return (car stmnt)) (pret_return stmnt env))
-     ; ((operator? (car stmnt)) (cadr (value stmnt env)))
-      (else (error stmnt)))))
+      (else (error "invalid parse tree")))))
 
 (define pret_return
   (lambda (stmnt env)
@@ -37,7 +34,6 @@
       (else ;has an else
        (cond
          ((car (eval_if (cadr stmnt) env)) (interpret_sl (cons (caddr stmnt) '()) (cadr (eval_if (cadr stmnt) env))))
-        ; ((car (eval_if (cadr stmnt) env)) (error stmnt))
          (else (interpret_sl (cons (cdddr stmnt) '()) (cadr (eval_if (cadr stmnt) env)))))))))
 
 (define eval_if
@@ -112,8 +108,7 @@
     (cond
       ((null? val) (cons (cons var '()) env))
       ((or (number? val) (boolean? val)) (cons (cons var (cons val '())) env))
-      ;(else (error "invalid type, variables must be an integer or boolean")))))
-(else (error val)))))
+      (else (error "invalid type, variables must be an integer or boolean")))))
 
 (define unbind
   (lambda (var env)
@@ -136,10 +131,6 @@
     (cond
       ((null? stmnt) (error "null arg passed to declare"))
       ((null? (cddr stmnt)) (bind (cadr stmnt) '() env))
-      ((not (list? (cddr stmnt))) ;if the last element is not a list
-       (cond ;make sure it's something we like
-         ((or (number? (cddr stmnt)) (or (eq? "true" (cddr stmnt)) (eq? "false" (cddr stmnt)))) (bind (cadr stmnt) (cddr stmnt) env))
-         (else (error "unrecognized rhs"))))
       (else (bind (cadr stmnt) (car (value (cddr stmnt) env)) (cadr (value (caddr stmnt) env)))))))
 
 (define pret_assign
@@ -149,4 +140,3 @@
       ((null? (cddr stmnt)) (error "no value to assign"))
       ((declared? (cadr stmnt) env) (cons (car (value (caddr stmnt) env)) (cons (bind (cadr stmnt) (car (value (caddr stmnt) env)) (cadr (value (caddr stmnt) env))) '())))
       (else (error "unrecognized lhs")))))
-
