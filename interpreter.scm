@@ -13,12 +13,13 @@
 (define interpret_stmnt
   (lambda (stmnt env)
     (cond
-      ((null? stmnt) env)
-      ((not (pair? stmnt)) env)
+      ;((null? stmnt) env)
+      ;((not (pair? stmnt)) env)
       ((eq? '= (car stmnt)) (cadr (pret_assign stmnt env)))
       ((eq? 'var (car stmnt)) (pret_declare stmnt env))
       ((eq? 'if (car stmnt)) (pret_if stmnt env))
       ((eq? 'return (car stmnt)) (pret_return stmnt env))
+     ; ((operator? (car stmnt)) (cadr (value stmnt env)))
       (else (error "invalid operator")))))
 
 (define pret_return
@@ -30,12 +31,12 @@
     (cond
       ((null? (cdddr stmnt)) ;no else
        (cond
-         ((car (eval_if (cadr stmnt) env)) (interpret_sl (caddr stmnt) (cadr (eval_if (cadr stmnt) env))))
+         ((car (eval_if (cadr stmnt) env)) (interpret_sl (cddr stmnt) (cadr (eval_if (cadr stmnt) env))))
          (else (cadr (eval_if (cadr stmnt) env)))))
       (else ;has an else
        (cond
-         ((car (eval_if (cadr stmnt) env)) (interpret_sl (caddr stmnt) (cadr (eval_if? (cadr stmnt) env))))
-         (else (interpret_sl (caddr stmnt) (cadr (eval_if (cadr stmnt) env)))))))))
+         ((car (eval_if (cadr stmnt) env)) (interpret_sl (cddr stmnt) (cadr (eval_if (cadr stmnt) env))))
+         (else (interpret_sl (cdddr stmnt) (cadr (eval_if (cadr stmnt) env)))))))))
 
 (define eval_if
   (lambda (if env)
