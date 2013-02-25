@@ -2,7 +2,7 @@
 
 (define interpret
   (lambda (filename)
-    (lookup 'return (interpret_sl (parser filename) ('((return)))))))
+    (lookup 'return (interpret_sl (parser filename) '((return))))))
 
 (define interpret_sl
   (lambda (ptree env)
@@ -13,10 +13,10 @@
 (define interpret_stmnt
   (lambda (stmnt env)
     (cond
-      ((eq? '= (car statement)) (cadr (pret_assign stmnt env)))
-      ((eq? 'var (car statement)) (pret_declare stmnt env))
-      ((eq? 'if (car statement)) (pret_if stmnt env))
-      ((eq? 'return (car statement)) (pret_return stmnt env))
+      ((eq? '= (car stmnt)) (cadr (pret_assign stmnt env)))
+      ((eq? 'var (car stmnt)) (pret_declare stmnt env))
+      ((eq? 'if (car stmnt)) (pret_if stmnt env))
+      ((eq? 'return (car stmnt)) (pret_return stmnt env))
       (else (error "invalid operator")))))
 
 (define pret_return
@@ -123,7 +123,7 @@
     (cond
       ((null? env) #f)
       ((null? var) (error "null var"))
-      ((eq? (caar env var)) #t)
+      ((eq? (caar env) var) #t)
       (else (declared? var (cdr env))))))
 
 (define pret_declare
@@ -144,7 +144,7 @@
       ((null? (cdr stmnt)) (error "no value to assign"))
       ((declared? (cadr stmnt) env) ;if it exists already
         (cond
-          ((list? cddr stmnt) ;if the right hand side is a list
+          ((list? (cddr stmnt)) ; if the right side is a list
            (cond
              ((or (operator? (caddr stmnt)) (eq? '= (caddr stmnt))) (cons (value cddr stmnt) (cons (bind (cadr stmnt) (value (cddr stmnt)) (unbind (cadr stmnt) env)) '())))
              (else (error "unrecognized rhs"))))
