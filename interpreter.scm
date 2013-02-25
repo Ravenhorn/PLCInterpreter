@@ -15,12 +15,13 @@
     (cond
       ;((null? stmnt) env)
       ;((not (pair? stmnt)) env)
+      ((pair? (car stmnt)) (interpret_stmnt (car stmnt) env))
       ((eq? '= (car stmnt)) (cadr (pret_assign stmnt env)))
       ((eq? 'var (car stmnt)) (pret_declare stmnt env))
       ((eq? 'if (car stmnt)) (pret_if stmnt env))
       ((eq? 'return (car stmnt)) (pret_return stmnt env))
      ; ((operator? (car stmnt)) (cadr (value stmnt env)))
-      (else (error "invalid operator")))))
+      (else (error stmnt)))))
 
 (define pret_return
   (lambda (stmnt env)
@@ -153,6 +154,6 @@
              (else (error "unrecognized rhs"))))
           ((or (number? (caddr stmnt)) (or (eq? (cddr stmnt) "true") (eq? (cddr stmnt) "false"))) (cons (caddr stmnt) (cons (bind (cadr stmnt) (caddr stmnt) (unbind (cadr stmnt) env)) '())))
           ((declared? (caddr stmnt) env) (cons (lookup (cddr stmnt)) (cons (bind (cadr stmnt) (lookup (cddr stmnt)) (unbind (cadr stmnt) env)) '())))
-          (else (error "unrecognized rhs"))))
+          (else (error stmnt))))
       (else (error "unrecognized lhs")))))
 
