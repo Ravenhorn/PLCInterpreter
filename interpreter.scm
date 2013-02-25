@@ -115,14 +115,6 @@
       ;(else (error "invalid type, variables must be an integer or boolean")))))
 (else (error val)))))
 
-(define unbind
-  (lambda (var env)
-    (cond
-      ((null? env) '())
-      ((null? var) (error "null var"))
-      ((eq? (caar env) var) (unbind var (cdr env)))
-      (else (cons (car env) (unbind var (cdr env)))))))
-
 (define declared?
   (lambda (var env)
     (cond
@@ -136,10 +128,6 @@
     (cond
       ((null? stmnt) (error "null arg passed to declare"))
       ((null? (cddr stmnt)) (bind (cadr stmnt) '() env))
-      ((not (list? (cddr stmnt))) ;if the last element is not a list
-       (cond ;make sure it's something we like
-         ((or (number? (cddr stmnt)) (or (eq? "true" (cddr stmnt)) (eq? "false" (cddr stmnt)))) (bind (cadr stmnt) (cddr stmnt) env))
-         (else (error "unrecognized rhs"))))
       (else (bind (cadr stmnt) (car (value (cddr stmnt) env)) (cadr (value (caddr stmnt) env)))))))
 
 (define pret_assign
