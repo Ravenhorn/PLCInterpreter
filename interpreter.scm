@@ -62,7 +62,7 @@
       ((or (number? expr) (boolean? expr)) (cons expr (cons env '())))
       ((not (pair? expr)) (cons (lookup expr env) (cons env '())))
       ((null? (cdr expr)) (value (car expr) env))
-      ((eq? '= (car expr)) (pret_assign (expr env)))
+      ((eq? '= (car expr)) (pret_assign expr env))
       (else (cons ((getOp (car expr)) (car (value (cadr expr) env)) (car (value (caddr expr) (cadr (value (cadr expr) env))))) 
                   (cons (cadr (value (caddr expr) (cadr (value (cadr expr) env)))) '()))))))
 
@@ -114,8 +114,8 @@
     (cond
       ((null? env) '())
       ((null? var) (error "null var"))
-      ((eq? (caar env var)) (cdr env))
-      (else (cons (car env) (unbind var env))))))
+      ((eq? (caar env) var) (unbind var (cdr env)))
+      (else (cons (car env) (unbind var (cdr env)))))))
 
 (define declared?
   (lambda (var env)
@@ -134,21 +134,21 @@
        (cond ;make sure it's something we like
          ((or (number? (cddr stmnt)) (or (eq? "true" (cddr stmnt)) (eq? "false" (cddr stmnt)))) (bind (cadr stmnt) (cddr stmnt) env))
          (else (error "unrecognized rhs"))))
-      (else (bind (cadr stmnt) (car (value (cddr stmnt) env)) (cadr (value (cddr stmnt) env)))))))
+      (else (bind (cadr stmnt) (car (value (cddr stmnt) env)) (cadr (value (caddr stmnt) env)))))))
 
 (define pret_assign
   (lambda(stmnt env)
     (cond
       ((null? stmnt) (error "null arg passed to assign"))
-      ((null? (cdr stmnt)) (error "no value to assign"))
+      ((null? (cddr stmnt)) (error "no value to assign"))
       ((declared? (cadr stmnt) env) ;if it exists already
         (cond
-          ((list? (cddr stmnt)) ; if the right side is a list
+          ((not (null? (cdddr stmnt))) ; if the right side is a list
            (cond
              ((or (operator? (caddr stmnt)) (eq? '= (caddr stmnt))) (cons (value cddr stmnt) (cons (bind (cadr stmnt) (value (cddr stmnt)) (unbind (cadr stmnt) env)) '())))
              (else (error "unrecognized rhs"))))
-          ((or (number? (cddr stmnt)) (or (eq? (cddr stmnt) "true") (eq? (cddr stmnt) "false"))) (cons (cddr stmnt) (cons (bind (cadr stmnt) (cddr stmnt) (unbind (cadr stmnt) env)) '())))
-          ((declared? (cddr stmnt)) (cons (lookup (cddr stmnt)) (cons (bind (cadr stmnt) (lookup (cddr stmnt)) (unbind (cadr stmnt) env)) '())))
+          ((or (number? (caddr stmnt)) (or (eq? (cddr stmnt) "true") (eq? (cddr stmnt) "false"))) (cons (caddr stmnt) (cons (bind (cadr stmnt) (caddr stmnt) (unbind (cadr stmnt) env)) '())))
+          ((declared? (caddr stmnt) env) (cons (lookup (cddr stmnt)) (cons (bind (cadr stmnt) (lookup (cddr stmnt)) (unbind (cadr stmnt) env)) '())))
           (else (error "unrecognized rhs"))))
       (else (error "unrecognized lhs")))))
 
