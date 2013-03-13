@@ -6,7 +6,8 @@
 
 (define interpret
   (lambda (filename)
-    (lookup 'return (interpret_sl (parser filename) '((return))))))
+    (call/cc (lambda (k)
+               (interpret_sl (parser filename) '() k)))))
 
 (define interpret_sl
   (lambda (ptree env)
@@ -15,18 +16,32 @@
       (else (interpret_sl (cdr ptree) (interpret_stmnt (car ptree) env))))))
 
 (define interpret_stmnt
-  (lambda (stmnt env)
+  (lambda (stmnt env ret brk cont)
     (cond
       ((pair? (car stmnt)) (interpret_stmnt (car stmnt) env))
       ((eq? '= (car stmnt)) (cadr (pret_assign stmnt env)))
       ((eq? 'var (car stmnt)) (pret_declare stmnt env))
-      ((eq? 'if (car stmnt)) (pret_if stmnt env))
-      ((eq? 'return (car stmnt)) (pret_return stmnt env))
+      ((eq? 'if (car stmnt)) (pret-if stmnt env ret break continue))
+      ((eq? 'return (car stmnt)) (ret (pret_return stmnt env)))
+      ((eq? 'while (car smnt)) (pret-while stmnt env ret))
+      ((eq? 'break (car stmnt)) (brk env))
+      ((eq? 'continue (car stmnt)) (cont env))
       (else (error "invalid parse tree")))))
+
+(define pret-while
+  (lambda (stmnt enviro return)
+    (call/cc (lambda (break)
+               (letrec ((loop (lambda (cond body env)
+                                (if (eval-if cond env)
+                                    (loop cond body (interpret-statement body env return break (lambda (e) (loop cond body e))))
+                                    (env))))
+                        (loop (cadr stmnt) (caddr stmnt) enviro)))))))
+
 
 (define pret_return
   (lambda (stmnt env)
-    (bind 'return (car (value (cadr stmnt) env)) (cadr (value (cadr stmnt) env)))))
+    ;(bind 'return (car (value (cadr stmnt) env)) (cadr (value (cadr stmnt) env)))))
+    (car (value (cadr stmnt) env))
 
 (define pret_declare
   (lambda (stmnt env)
