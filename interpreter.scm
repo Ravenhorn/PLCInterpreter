@@ -126,8 +126,8 @@
 (define bind
   (lambda (var val env)
     (cond
-      ((null? val) (cons (cons var '()) env))
-      ((or (number? val) (boolean? val)) (cons (cons var (cons val '())) env))
+      ((null? val) (cons var (caar (cons '() (cadar env)))))
+      ((or (number? val) (boolean? val)) (cons var (caar (cons (cons val '()) (cadar env)))))
       (else (error "invalid type, variables must be an integer or boolean")))))
 
 (define declared?
@@ -135,5 +135,6 @@
     (cond
       ((null? env) #f)
       ((null? var) (error "null var"))
-      ((eq? (caar env) var) #t)
+      ((eq? (car env) var) #t)
+      ((and (list? (car env)) (declared? var (car env))) #t)
       (else (declared? var (cdr env))))))
