@@ -131,18 +131,25 @@
 (define lookup
   (lambda (var env)
     (cond
-      ((null? env) (error "variable not declared"))
-      ((eq? var (caar env))
-       (cond
-         ((null? (cdar env)) (error "variable declared but not initialized"))
-         (else (cadar env))))
+      ((null? env) (error "env is pretty boned."))
+      ((not (null? (lookvar var (caar env) (cadar env)))) (lookvar var (caar env) (cadar env)))
       (else (lookup var (cdr env))))))
+
+(define lookvar
+  (lambda (var varlist vallist)
+    (cond
+      ((null? varlist) '())
+      ((eq? var (car varlist))
+       (cond
+         ((null? (car vallist)) (error "variable declared but not initialized"))
+         (else (car vallist))))
+      (else (lookvar var (cdr varlist) (cdr vallist))))))
 
 (define bind
   (lambda (var val env)
     (cond
       ((null? val) (cons var (caar (cons '() (cadar env)))))
-      ((or (number? val) (boolean? val)) (cons var (caar (cons (cons val '()) (cadar env)))))
+      ((or (number? val) (boolean? val)) (cons var (caar (cons val (cadar env)))))
       (else (error "invalid type, variables must be an integer or boolean")))))
 
 (define declared?
