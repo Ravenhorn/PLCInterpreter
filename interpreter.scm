@@ -34,14 +34,14 @@
                (letrec ((loop (lambda (cond body env)
                                 (if (eval-if cond env)
                                     (loop cond body (interpret-statement body env return break (lambda (e) (loop cond body e))))
-                                    (env))))
-                        (loop (cadr stmnt) (caddr stmnt) enviro)))))))
+                                    (env)))))
+                        (loop (cadr stmnt) (caddr stmnt) enviro))))))
 
 
 (define pret_return
   (lambda (stmnt env)
     ;(bind 'return (car (value (cadr stmnt) env)) (cadr (value (cadr stmnt) env)))))
-    (car (value (cadr stmnt) env))
+    (car (value (cadr stmnt) env))))
 
 (define pret_declare
   (lambda (stmnt env)
