@@ -2,7 +2,7 @@
 ;Stuart Long and Jason Kuster
 ;EECS 345 Interpreter 1
 
-(load "verySimpleParser.scm")
+(load "loopSimpleParser.scm")
 
 (define interpret
   (lambda (filename)
@@ -55,7 +55,7 @@
     (cond
       ((null? stmnt) (error "null arg passed to assign"))
       ((null? (cddr stmnt)) (error "no value to assign"))
-      ((declared? (cadr stmnt) env) (cons (car (value (caddr stmnt) env)) (cons (bind (cadr stmnt) (car (value (caddr stmnt) env)) (cadr (value (caddr stmnt) env))) '())))
+      ((declared? (cadr stmnt) env) (cons (car (value (caddr stmnt) env)) (cons (bind-deep (cadr stmnt) (car (value (caddr stmnt) env)) (cadr (value (caddr stmnt) env))) '())))
       (else (error "unrecognized lhs")))))
 
      
@@ -128,6 +128,10 @@
       ((eq? '! op) #t)
       (else #f))))
 
+(define nest-scope
+  (lambda (env)
+    (cons (cons '() (cons '() '())) env)))
+
 (define lookup
   (lambda (var env)
     (cond
@@ -148,9 +152,15 @@
 (define bind
   (lambda (var val env)
     (cond
-      ((null? val) (cons var (caar (cons '() (cadar env)))))
-      ((or (number? val) (boolean? val)) (cons (cons (cons var (caar env)) (cons (cons val (cadar env)) '())) (cdr env)))
+      ((or (or (number? val) (boolean? val)) (null? val)) (cons (cons (cons var (caar env)) (cons (cons val (cadar env)) '())) (cdr env)))
       (else (error "invalid type, variables must be an integer or boolean")))))
+
+(define bind-deep
+  (lambda (var val env)
+    (cond
+      ((null? env) '())
+      ((declared? var (cons (car env) '())) (bind var val env))
+      (else (cons (car env) (bind_deep var val (cdr env)))))))
 
 (define declared?
   (lambda (var env)
