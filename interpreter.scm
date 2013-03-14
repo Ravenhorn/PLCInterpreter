@@ -132,7 +132,7 @@
   (lambda (var env)
     (cond
       ((null? env) (error "variable not declared"))
-      ((eq? var (caaar env))
+      ((eq? var (caar env))
        (cond
          ((null? (cdar env)) (error "variable declared but not initialized"))
          (else (cadar env))))
