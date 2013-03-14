@@ -1,19 +1,19 @@
 ;KALAA Interpreter
 ;Stuart Long and Jason Kuster
-;EECS 345 Interpreter 1
+;EECS 345 Interpreter 2
 
 (load "loopSimpleParser.scm")
 
 (define interpret
   (lambda (filename)
-    (call/cc (lambda (k)
-               (interpret_sl (parser filename) '() k)))))
+    (call/cc (lambda (ret)
+               (interpret_sl (parser filename) '((() ())) ret (lambda (env) (error("break called outside of a loop"))) (lambda (env)(error("continue called outside of a loop"))))))))
 
 (define interpret_sl
-  (lambda (ptree env)
+  (lambda (ptree env ret brk cont)
     (cond
       ((null? ptree) env)
-      (else (interpret_sl (cdr ptree) (interpret_stmnt (car ptree) env))))))
+      (else (interpret_sl (cdr ptree) (interpret_stmnt (car ptree) env ret brk cont) ret brk cont)))))
 
 (define interpret_stmnt
   (lambda (stmnt env ret brk cont)
@@ -23,9 +23,10 @@
       ((eq? 'var (car stmnt)) (pret_declare stmnt env))
       ((eq? 'if (car stmnt)) (pret-if stmnt env ret break continue))
       ((eq? 'return (car stmnt)) (ret (pret_return stmnt env)))
-      ((eq? 'while (car smnt)) (pret-while stmnt env ret))
+      ((eq? 'while (car stmnt)) (pret-while stmnt env ret))
       ((eq? 'break (car stmnt)) (brk env))
       ((eq? 'continue (car stmnt)) (cont env))
+      ((eq? 'begin (car stmnt)) (interpret_sl (cdr stmnt) env ret brk cont))
       (else (error "invalid parse tree")))))
 
 (define pret-while
@@ -35,7 +36,7 @@
                                 (if (eval-if cond env)
                                     (loop cond body (interpret-statement body env return break (lambda (e) (loop cond body e))))
                                     (env)))))
-                        (loop (cadr stmnt) (caddr stmnt) enviro))))))
+                        (pop-frame (loop (cadr stmnt) (caddr stmnt) (push-frame enviro))))))))
 
 
 (define pret_return
@@ -128,9 +129,13 @@
       ((eq? '! op) #t)
       (else #f))))
 
-(define nest-scope
+(define push-frame
   (lambda (env)
     (cons (cons '() (cons '() '())) env)))
+
+(define pop-frame
+  (lambda (env)
+    (cdr (env))))
 
 (define lookup
   (lambda (var env)
@@ -160,7 +165,7 @@
     (cond
       ((null? env) '())
       ((declared? var (cons (car env) '())) (bind var val env))
-      (else (cons (car env) (bind_deep var val (cdr env)))))))
+      (else (cons (car env) (bind-deep var val (cdr env)))))))
 
 (define declared?
   (lambda (var env)
