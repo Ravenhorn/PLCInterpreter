@@ -117,6 +117,10 @@
   (lambda (var env)
     (cond
       ((null? env) (error "variable not declared"))
+      ((list? (caar env))
+       (cond
+         ((declared? var (caar env)) (lookup var (caar env)))
+         (else (lookup var (cdr env)))))
       ((eq? var (caar env))
        (cond
          ((null? (cdar env)) (error "variable declared but not initialized"))
