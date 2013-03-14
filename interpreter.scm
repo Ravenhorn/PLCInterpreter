@@ -131,7 +131,7 @@
 (define lookup
   (lambda (var env)
     (cond
-      ((null? env) (error "env is pretty boned."))
+      ((null? env) (error "variable not declared"))
       ((not (null? (lookvar var (caar env) (cadar env)))) (lookvar var (caar env) (cadar env)))
       (else (lookup var (cdr env))))))
 
@@ -149,7 +149,7 @@
   (lambda (var val env)
     (cond
       ((null? val) (cons var (caar (cons '() (cadar env)))))
-      ((or (number? val) (boolean? val)) (cons var (caar (cons val (cadar env)))))
+      ((or (number? val) (boolean? val)) (cons (cons (cons var (caar env)) (cons (cons val (cadar env)) '())) (cdr env)))
       (else (error "invalid type, variables must be an integer or boolean")))))
 
 (define declared?
