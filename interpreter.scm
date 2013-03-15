@@ -21,7 +21,7 @@
       ((pair? (car stmnt)) (interpret_stmnt (car stmnt) env))
       ((eq? '= (car stmnt)) (cadr (pret_assign stmnt env)))
       ((eq? 'var (car stmnt)) (pret_declare stmnt env))
-      ((eq? 'if (car stmnt)) (pret-if stmnt env ret break continue))
+      ((eq? 'if (car stmnt)) (pret-if stmnt env ret brk cont))
       ((eq? 'return (car stmnt)) (ret (pret_return stmnt env)))
       ((eq? 'while (car stmnt)) (pret-while stmnt env ret))
       ((eq? 'break (car stmnt)) (brk env))
@@ -33,11 +33,10 @@
   (lambda (stmnt enviro return)
     (call/cc (lambda (break)
                (letrec ((loop (lambda (cond body env)
-                                (if (eval-if cond env)
-                                    (loop cond body (interpret-statement body env return break (lambda (e) (loop cond body e))))
-                                    (env)))))
+                                (if (car (eval_if cond env)) ;side effects not fixed here yet
+                                    (loop cond body (interpret_stmnt body env return break (lambda (e) (loop cond body e))))
+                                    env))))
                         (pop-frame (loop (cadr stmnt) (caddr stmnt) (push-frame enviro))))))))
-
 
 (define pret_return
   (lambda (stmnt env)
@@ -61,16 +60,16 @@
 
      
 (define pret_if
-  (lambda (stmnt env)
+  (lambda (stmnt env ret brk cont)
     (cond
       ((null? (cdddr stmnt)) ;no else
        (cond
-         ((car (eval_if (cadr stmnt) env)) (interpret_sl (cons (caddr stmnt) '()) (cadr (eval_if (cadr stmnt) env))))
+         ((car (eval_if (cadr stmnt) env)) (pop-frame (interpret_stmnt (caddr stmnt) (push-frame (cadr (eval_if (cadr stmnt) env))) ret brk cont)))
          (else (cadr (eval_if (cadr stmnt) env)))))
       (else ;has an else
        (cond
-         ((car (eval_if (cadr stmnt) env)) (interpret_sl (cons (caddr stmnt) '()) (cadr (eval_if (cadr stmnt) env))))
-         (else (interpret_sl (cons (cdddr stmnt) '()) (cadr (eval_if (cadr stmnt) env)))))))))
+         ((car (eval_if (cadr stmnt) env)) (pop-frame (interpret_stmnt (caddr stmnt) (push-frame (cadr (eval_if (cadr stmnt) env))) ret brk cont)))
+         (else (pop-frame (interpret_stmnt (cdddr stmnt) (push-frame (cadr (eval_if (cadr stmnt) env))) ret brk cont)))))))) ;take a look at if cdddr is right
 
 (define eval_if
   (lambda (if env)
@@ -135,7 +134,7 @@
 
 (define pop-frame
   (lambda (env)
-    (cdr (env))))
+    (cdr env)))
 
 (define lookup
   (lambda (var env)
