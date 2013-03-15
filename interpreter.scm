@@ -7,50 +7,50 @@
 (define interpret
   (lambda (filename)
     (call/cc (lambda (ret)
-               (interpret_sl (parser filename) '((() ())) ret (lambda (env) (error("break called outside of a loop"))) (lambda (env)(error("continue called outside of a loop"))))))))
+               (interpret-sl (parser filename) '((() ())) ret (lambda (env) (error("break called outside of a loop"))) (lambda (env)(error("continue called outside of a loop"))))))))
 
-(define interpret_sl
+(define interpret-sl
   (lambda (ptree env ret brk cont)
     (cond
       ((null? ptree) env)
-      (else (interpret_sl (cdr ptree) (interpret_stmnt (car ptree) env ret brk cont) ret brk cont)))))
+      (else (interpret-sl (cdr ptree) (interpret-stmnt (car ptree) env ret brk cont) ret brk cont)))))
 
-(define interpret_stmnt
+(define interpret-stmnt
   (lambda (stmnt env ret brk cont)
     (cond
-      ((pair? (car stmnt)) (interpret_stmnt (car stmnt) env))
-      ((eq? '= (car stmnt)) (cadr (pret_assign stmnt env)))
-      ((eq? 'var (car stmnt)) (pret_declare stmnt env))
-      ((eq? 'if (car stmnt)) (pret_if stmnt env ret brk cont))
-      ((eq? 'return (car stmnt)) (ret (pret_return stmnt env)))
+      ((pair? (car stmnt)) (interpret-stmnt (car stmnt) env))
+      ((eq? '= (car stmnt)) (cadr (pret-assign stmnt env)))
+      ((eq? 'var (car stmnt)) (pret-declare stmnt env))
+      ((eq? 'if (car stmnt)) (pret-if stmnt env ret brk cont))
+      ((eq? 'return (car stmnt)) (ret (pret-return stmnt env)))
       ((eq? 'while (car stmnt)) (pret-while stmnt env ret))
       ((eq? 'break (car stmnt)) (brk env))
       ((eq? 'continue (car stmnt)) (cont env))
-      ((eq? 'begin (car stmnt)) (interpret_sl (cdr stmnt) env ret brk cont))
+      ((eq? 'begin (car stmnt)) (interpret-sl (cdr stmnt) env ret brk cont))
       (else (error "invalid parse tree")))))
 
 (define pret-while
   (lambda (stmnt enviro return)
     (call/cc (lambda (break)
                (letrec ((loop (lambda (cond body env)
-                                (if (car (eval_if cond env)) ;side effects not fixed here yet
-                                    (loop cond body (interpret_stmnt body (cadr (eval_if (cadr stmnt) env)) return break (lambda (e) (loop cond body e))))
+                                (if (car (eval-if cond env)) ;side effects not fixed here yet
+                                    (loop cond body (interpret-stmnt body (cadr (eval-if cond env)) return break (lambda (e) (loop cond body e))))
                                     env))))
                         (pop-frame (loop (cadr stmnt) (caddr stmnt) (push-frame enviro))))))))
 
-(define pret_return
+(define pret-return
   (lambda (stmnt env)
     ;(bind 'return (car (value (cadr stmnt) env)) (cadr (value (cadr stmnt) env)))))
     (car (value (cadr stmnt) env))))
 
-(define pret_declare
+(define pret-declare
   (lambda (stmnt env)
     (cond
       ((null? stmnt) (error "null arg passed to declare"))
       ((null? (cddr stmnt)) (bind (cadr stmnt) '() env))
       (else (bind (cadr stmnt) (car (value (cddr stmnt) env)) (cadr (value (caddr stmnt) env)))))))
 
-(define pret_assign
+(define pret-assign
   (lambda(stmnt env)
     (cond
       ((null? stmnt) (error "null arg passed to assign"))
@@ -59,19 +59,19 @@
       (else (error "unrecognized lhs")))))
 
      
-(define pret_if
+(define pret-if
   (lambda (stmnt env ret brk cont)
     (cond
       ((null? (cdddr stmnt)) ;no else
        (cond
-         ((car (eval_if (cadr stmnt) env)) (pop-frame (interpret_stmnt (caddr stmnt) (push-frame (cadr (eval_if (cadr stmnt) env))) ret brk cont)))
-         (else (cadr (eval_if (cadr stmnt) env)))))
+         ((car (eval-if (cadr stmnt) env)) (pop-frame (interpret-stmnt (caddr stmnt) (push-frame (cadr (eval-if (cadr stmnt) env))) ret brk cont)))
+         (else (cadr (eval-if (cadr stmnt) env)))))
       (else ;has an else
        (cond
-         ((car (eval_if (cadr stmnt) env)) (pop-frame (interpret_stmnt (caddr stmnt) (push-frame (cadr (eval_if (cadr stmnt) env))) ret brk cont)))
-         (else (pop-frame (interpret_stmnt (cadddr stmnt) (push-frame (cadr (eval_if (cadr stmnt) env))) ret brk cont))))))))
+         ((car (eval-if (cadr stmnt) env)) (pop-frame (interpret-stmnt (caddr stmnt) (push-frame (cadr (eval-if (cadr stmnt) env))) ret brk cont)))
+         (else (pop-frame (interpret-stmnt (cadddr stmnt) (push-frame (cadr (eval-if (cadr stmnt) env))) ret brk cont))))))))
 
-(define eval_if
+(define eval-if
   (lambda (if env)
     (cond
       ((null? (cddr if)) (cons ((getBool (car if)) (car (value (cadr if) env))) (cons (cadr (value (cadr if) env)) '())))
@@ -98,7 +98,7 @@
       ((or (number? expr) (boolean? expr)) (cons expr (cons env '())))
       ((not (pair? expr)) (cons (lookup expr env) (cons env '())))
       ((null? (cdr expr)) (value (car expr) env))
-      ((eq? '= (car expr)) (pret_assign expr env))
+      ((eq? '= (car expr)) (pret-assign expr env))
       (else (cons ((getOp (car expr)) (car (value (cadr expr) env)) (car (value (caddr expr) (cadr (value (cadr expr) env))))) 
                   (cons (cadr (value (caddr expr) (cadr (value (cadr expr) env)))) '()))))))
 
