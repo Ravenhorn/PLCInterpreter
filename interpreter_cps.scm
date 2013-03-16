@@ -76,10 +76,12 @@
 
 (define eval-if
   (lambda (if env k)
-    (cond
-      ((null? (cddr if)) (k (cons ((getBool (car if)) (car (value (cadr if) env))) (cons (cadr (value (cadr if) env)) '()))))
-      (else (k (cons ((getBool (car if)) (car (value (cadr if) env)) (car (value (caddr if) (cadr (value (cadr if) env))))) 
-                  (cons (cadr (value (caddr if) (cadr (value (cadr if) env)))) '())))))))
+    (value (cadr if) env
+           (lambda (val_env)
+             (cond
+               ((null? (cddr if)) (k (cons ((getBool (car if)) (car val_env)) (cons (cadr val_env) '()))))
+               (else (k (cons ((getBool (car if)) (car val_env) (car (value (caddr if) (cadr val_env))))
+                              (cons (cadr (value (caddr if) (cadr (value (cadr if) env)))) '())))))))))
                                       
 (define getBool
   (lambda (op)
@@ -96,14 +98,16 @@
       (else (error "invalid bool operator")))))
 
 (define value
-  (lambda (expr env)
+  (lambda (expr env k)
     (cond
-      ((or (number? expr) (boolean? expr)) (cons expr (cons env '())))
-      ((not (pair? expr)) (cons (lookup expr env) (cons env '())))
-      ((null? (cdr expr)) (value (car expr) env))
-      ((eq? '= (car expr)) (pret-assign expr env))
-      (else (cons ((getOp (car expr)) (car (value (cadr expr) env)) (car (value (caddr expr) (cadr (value (cadr expr) env))))) 
-                  (cons (cadr (value (caddr expr) (cadr (value (cadr expr) env)))) '()))))))
+      ((or (number? expr) (boolean? expr)) (k (cons expr (cons env '()))))
+      ((not (pair? expr)) (k (cons (lookup expr env) (cons env '()))))
+      ((null? (cdr expr)) (k (value (car expr) env) (lambda (v) v)))
+      ((eq? '= (car expr)) (k (pret-assign expr env)))
+      (else (value (cadr expr) env
+                   (lambda (val_cadr) (value (caddr expr) (cadr val_cadr) 
+                                             (lambda (val_caddr) (cons ((getOp (car expr)) (car val_cadr) (car val_caddr))
+                                                                       (cons (cadr val_caddr) '()))))))))))
 
 (define getOp
   (lambda (op)
