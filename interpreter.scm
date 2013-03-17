@@ -2,7 +2,7 @@
 ;Stuart Long and Jason Kuster
 ;EECS 345 Interpreter 1
 
-(load "verySimpleParser.scm")
+(load "loopSimpleParser.scm")
 
 (define interpret
   (lambda (filename)
@@ -10,10 +10,10 @@
                (interpret_sl (parser filename) '() k)))))
 
 (define interpret_sl
-  (lambda (ptree env)
+  (lambda (ptree env k)
     (cond
       ((null? ptree) env)
-      (else (interpret_sl (cdr ptree) (interpret_stmnt (car ptree) env))))))
+      (else (interpret_sl (cdr ptree) (interpret_stmnt (car ptree) env k '() '()) k)))))
 
 (define interpret_stmnt
   (lambda (stmnt env ret brk cont)
@@ -21,9 +21,9 @@
       ((pair? (car stmnt)) (interpret_stmnt (car stmnt) env))
       ((eq? '= (car stmnt)) (cadr (pret_assign stmnt env)))
       ((eq? 'var (car stmnt)) (pret_declare stmnt env))
-      ((eq? 'if (car stmnt)) (pret-if stmnt env ret break continue))
+      ((eq? 'if (car stmnt)) (pret_if stmnt env ret brk cont))
       ((eq? 'return (car stmnt)) (ret (pret_return stmnt env)))
-      ((eq? 'while (car smnt)) (pret-while stmnt env ret))
+      ((eq? 'while (car stmnt)) (pret-while stmnt env ret))
       ((eq? 'break (car stmnt)) (brk env))
       ((eq? 'continue (car stmnt)) (cont env))
       (else (error "invalid parse tree")))))
@@ -32,9 +32,9 @@
   (lambda (stmnt enviro return)
     (call/cc (lambda (break)
                (letrec ((loop (lambda (cond body env)
-                                (if (eval-if cond env)
-                                    (loop cond body (interpret-statement body env return break (lambda (e) (loop cond body e))))
-                                    (env)))))
+                                (if (eval_if cond env)
+                                    (loop cond body (interpret_stmnt body env return break (lambda (e) (loop cond body e))))
+                                      (env)))))
                         (loop (cadr stmnt) (caddr stmnt) enviro))))))
 
 
@@ -42,6 +42,7 @@
   (lambda (stmnt env)
     ;(bind 'return (car (value (cadr stmnt) env)) (cadr (value (cadr stmnt) env)))))
     (car (value (cadr stmnt) env))))
+    ;(error "hey")))
 
 (define pret_declare
   (lambda (stmnt env)
@@ -60,16 +61,16 @@
 
      
 (define pret_if
-  (lambda (stmnt env)
+  (lambda (stmnt env ret brk cont)
     (cond
       ((null? (cdddr stmnt)) ;no else
        (cond
-         ((car (eval_if (cadr stmnt) env)) (interpret_sl (cons (caddr stmnt) '()) (cadr (eval_if (cadr stmnt) env))))
+         ((car (eval_if (cadr stmnt) env)) (interpret_stmnt (caddr stmnt) (cadr (eval_if (cadr stmnt) env)) ret brk cont))
          (else (cadr (eval_if (cadr stmnt) env)))))
       (else ;has an else
        (cond
-         ((car (eval_if (cadr stmnt) env)) (interpret_sl (cons (caddr stmnt) '()) (cadr (eval_if (cadr stmnt) env))))
-         (else (interpret_sl (cons (cdddr stmnt) '()) (cadr (eval_if (cadr stmnt) env)))))))))
+         ((car (eval_if (cadr stmnt) env)) (interpret_stmnt (caddr stmnt) '() (cadr (eval_if (cadr stmnt) env)) ret brk cont))
+         (else (interpret_stmnt (cdddr stmnt) '() (cadr (eval_if (cadr stmnt) env)) ret brk cont)))))))
 
 (define eval_if
   (lambda (if env)
@@ -141,8 +142,8 @@
 (define bind
   (lambda (var val env)
     (cond
-      ((null? val) (cons var (caar (cons '() (cadar env)))))
-      ((or (number? val) (boolean? val)) (cons var (caar (cons (cons val '()) (cadar env)))))
+      ((null? val) (cons (cons var '()) env))
+      ((or (number? val) (boolean? val)) (cons (cons var (cons val '())) env))
       (else (error "invalid type, variables must be an integer or boolean")))))
 
 (define declared?
@@ -150,6 +151,5 @@
     (cond
       ((null? env) #f)
       ((null? var) (error "null var"))
-      ((eq? (car env) var) #t)
-      ((and (list? (car env)) (declared? var (car env))) #t)
+      ((eq? (caar env) var) #t)
       (else (declared? var (cdr env))))))
