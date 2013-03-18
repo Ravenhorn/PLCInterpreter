@@ -7,7 +7,7 @@
 (define interpret
   (lambda (filename)
     (call/cc (lambda (ret)
-               (interpret-sl (parser filename) '((() ())) ret (lambda (env) (error("break called outside of a loop"))) (lambda (env)(error("continue called outside of a loop"))))))))
+               (interpret-sl (parser filename) (new-env) ret (lambda (env) (error("break called outside of a loop"))) (lambda (env)(error("continue called outside of a loop"))))))))
 
 (define interpret-sl
   (lambda (ptree env ret brk cont)
@@ -41,7 +41,6 @@
 
 (define pret-return
   (lambda (stmnt env)
-    ;(bind 'return (car (value (cadr stmnt) env)) (cadr (value (cadr stmnt) env)))))
     (car (value (cadr stmnt) env (lambda (v) v)))))
 
 (define pret-declare
@@ -134,6 +133,10 @@
       ((eq? '&& op) #t)
       ((eq? '! op) #t)
       (else #f))))
+
+(define new-env
+  (lambda ()
+    '((() ())) ))
 
 (define push-frame
   (lambda (env)
