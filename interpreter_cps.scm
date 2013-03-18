@@ -94,7 +94,8 @@
       ((eq? '|| op) (lambda (b1 b2) (or b1 b2)));for some reason just returning or gives a syntax error
       ((eq? '&& op) (lambda (b1 b2) (and b1 b2)));for some reason just returning or gives a syntax error
       ((eq? '! op) not)
-      (else (error "invalid bool operator")))))
+      (else (error op)))))
+      ;(else (error "invalid bool operator")))))
 
 (define value
   (lambda (expr env k)
@@ -117,9 +118,10 @@
       ((eq? '/ op) quotient)
       ((eq? '% op) remainder)
       ((eq? '|| op) (lambda (b1 b2) (or b1 b2)));for some reason just returning or gives a syntax error
-      ((eq? '&& op) (lambda (b1 b2) (and b1 b2)));for some reason just returning or gives a syntax error
+      ((eq? '&& op) (lambda (b1 b2) (and b1 b2)));for some reason just returning and gives a syntax error
       ((eq? '! op) not)
-      (else (error "error in getOp, operator not found")))))
+      (else (getBool op)))))
+     ; (else (error "error in getOp, operator not found")))))
 
 (define operator?
   (lambda (op)
@@ -153,6 +155,7 @@
       ((not (null? (lookvar var (caar env) (cadar env)))) (lookvar var (caar env) (cadar env)))
       (else (lookup var (cdr env))))))
 
+;DO BOX STUFF STUART, ok ok, no need to yell
 (define lookvar
   (lambda (var varlist vallist)
     (cond
@@ -160,13 +163,13 @@
       ((eq? var (car varlist))
        (cond
          ((null? (car vallist)) (error "variable declared but not initialized"))
-         (else (car vallist))))
+         (else (unbox (car vallist)))))
       (else (lookvar var (cdr varlist) (cdr vallist))))))
 
 (define bind
   (lambda (var val env)
     (cond
-      ((or (or (number? val) (boolean? val)) (null? val)) (cons (cons (cons var (caar env)) (cons (cons val (cadar env)) '())) (cdr env)))
+      ((or (or (number? val) (boolean? val)) (null? val)) (cons (cons (cons var (caar env)) (cons (cons (box val) (cadar env)) '())) (cdr env)))
       (else (error "invalid type, variables must be an integer or boolean")))))
 
 (define bind-deep
