@@ -94,7 +94,8 @@
       ((eq? '|| op) (lambda (b1 b2) (or b1 b2)));for some reason just returning or gives a syntax error
       ((eq? '&& op) (lambda (b1 b2) (and b1 b2)));for some reason just returning or gives a syntax error
       ((eq? '! op) not)
-      (else (error "invalid bool operator")))))
+      (else (error op)))))
+      ;(else (error "invalid bool operator")))))
 
 (define value
   (lambda (expr env k)
@@ -119,7 +120,8 @@
       ((eq? '|| op) (lambda (b1 b2) (or b1 b2)));for some reason just returning or gives a syntax error
       ((eq? '&& op) (lambda (b1 b2) (and b1 b2)));for some reason just returning and gives a syntax error
       ((eq? '! op) not)
-      (else (error "error in getOp, operator not found")))))
+      (else (getBool op)))))
+     ; (else (error "error in getOp, operator not found")))))
 
 (define operator?
   (lambda (op)
