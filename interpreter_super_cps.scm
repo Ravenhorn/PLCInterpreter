@@ -19,7 +19,7 @@
   (lambda (stmnt env ret brk cont)
     (cond
       ((pair? (car stmnt)) (interpret-stmnt (car stmnt) env))
-      ((eq? '= (car stmnt)) (cadr (pret-assign stmnt env)))
+      ((eq? '= (car stmnt)) (pret-assign stmnt env (lambda (val env) env)))
       ((eq? 'var (car stmnt)) (pret-declare stmnt env))
       ((eq? 'if (car stmnt)) (pret-if stmnt env ret brk cont))
       ((eq? 'return (car stmnt)) (ret (pret-return stmnt env)))
@@ -33,54 +33,53 @@
   (lambda (stmnt enviro return)
     (call/cc (lambda (break)
                (letrec ((loop (lambda (cond body env)
-                                (eval-if cond env (lambda (if_env)
-                                                    (if (car if_env)
-                                                        (loop cond body (interpret-stmnt body (cadr if_env) return break (lambda (e) (loop cond body e))))
+                                (eval-if cond env (lambda (if1 if_enviro)
+                                                    (if  if1
+                                                        (loop cond body (interpret-stmnt body if_enviro return break (lambda (e) (loop cond body e))))
                                                         env))))))
                         (pop-frame (loop (cadr stmnt) (caddr stmnt) (push-frame enviro))))))))
 
 (define pret-return
   (lambda (stmnt env)
-    (car (value (cadr stmnt) env (lambda (v) v)))))
+    (value (cadr stmnt) env (lambda (val enviro) val))))
 
 (define pret-declare
   (lambda (stmnt env)
     (cond
       ((null? stmnt) (error "null arg passed to declare"))
       ((null? (cddr stmnt)) (bind (cadr stmnt) '() env))
-      (else (bind (cadr stmnt) (car (value (cddr stmnt) env (lambda (v) v))) (cadr (value (caddr stmnt) env (lambda (v) v))))))))
+      (else (bind (cadr stmnt) (value (cddr stmnt) env (lambda (val enviro) val)) (value (caddr stmnt) env (lambda (val2 enviro2) enviro2)))))))
 
 (define pret-assign
-  (lambda(stmnt env)
+  (lambda(stmnt env k)
     (cond
       ((null? stmnt) (error "null arg passed to assign"))
       ((null? (cddr stmnt)) (error "no value to assign"))
       ((declared? (cadr stmnt) env) (value (caddr stmnt) env 
-                                           (lambda (val_caddr) (cons (car val_caddr) (cons (bind-deep (cadr stmnt) (car val_caddr) (cadr val_caddr)) '()))))))))
+                                           ;(lambda (val_caddr) (cons (car val_caddr) (cons (bind-deep (cadr stmnt) (car val_caddr) (cadr val_caddr)) '()))))))))
+                                           (lambda (val enviro) (k val (bind-deep (cadr stmnt) val enviro))))))))
 
 (define pret-if
   (lambda (stmnt env ret brk cont)
     (eval-if (cadr stmnt) env 
-             (lambda (if_env)
+             (lambda (if1 enviro)
                (cond
                  ((null? (cdddr stmnt)) ;no else
                   (cond
-                    ((car if_env) (pop-frame (interpret-stmnt (caddr stmnt) (push-frame (cadr if_env)) ret brk cont)))
-                    (else (cadr if_env))))
+                    (if1 (pop-frame (interpret-stmnt (caddr stmnt) (push-frame enviro) ret brk cont)))
+                    (else enviro)))
                  (else ;has an else
                   (cond
-                    ((car if_env) (pop-frame (interpret-stmnt (caddr stmnt) (push-frame (cadr if_env)) ret brk cont)))
-                    (else (pop-frame (interpret-stmnt (cadddr stmnt) (push-frame (cadr if_env)) ret brk cont))))))))))
+                    (if1 (pop-frame (interpret-stmnt (caddr stmnt) (push-frame enviro) ret brk cont)))
+                    (else (pop-frame (interpret-stmnt (cadddr stmnt) (push-frame enviro) ret brk cont))))))))))
 
 (define eval-if
   (lambda (if env k)
     (value (cadr if) env
-           (lambda (val_cadr)
+           (lambda (val enviro)
              (cond
-               ((null? (cddr if)) (k (cons ((getBool (car if)) (car val_cadr)) (cons (cadr val_cadr) '()))))
-               (else (k (value (caddr if) (cadr val_cadr) (lambda (val_caddr) 
-                                                            (cons ((getBool (car if)) (car val_cadr) (car val_caddr))
-                                                                  (cons (cadr val_caddr) '())))))))))))
+               ((null? (cddr if)) (k ((getBool (car if)) val) enviro))
+               (else (value (caddr if) enviro (lambda (val2 enviro2) (k ((getBool (car if)) val val2) enviro2)))))))))
                                       
 (define getBool
   (lambda (op)
@@ -99,14 +98,18 @@
 (define value
   (lambda (expr env k)
     (cond
-      ((or (number? expr) (boolean? expr)) (k (cons expr (cons env '()))))
-      ((not (pair? expr)) (k (cons (lookup expr env) (cons env '()))))
-      ((null? (cdr expr)) (k (value (car expr) env (lambda (v) v))))
-      ((eq? '= (car expr)) (k (pret-assign expr env)))
-      (else (k (value (cadr expr) env
-                   (lambda (val_cadr) (value (caddr expr) (cadr val_cadr) 
-                                             (lambda (val_caddr) (cons ((getOp (car expr)) (car val_cadr) (car val_caddr))
-                                                                       (cons (cadr val_caddr) '())))))))))))
+      ((or (number? expr) (boolean? expr)) (k expr env))
+      ((not (pair? expr)) (k (lookup expr env) env))
+      ((null? (cdr expr)) (value (car expr) env (lambda (vals enviro) (k vals enviro))))
+      ((eq? '= (car expr)) (pret-assign expr env (lambda (vals enviro) (k vals enviro))))
+      ((and (eq? '- (car expr)) (null? (cddr expr))) (value (cdr expr) env (lambda (vals enviro) (k (* -1 vals) enviro))))
+      (else (value (cadr expr) env
+                   ;(lambda (val_cadr) (value (caddr expr) (cadr val_cadr) 
+                    ;                         (lambda (val_caddr) (cons ((getOp (car expr)) (car val_cadr) (car val_caddr))
+                     ;                                                  (cons (cadr val_caddr) '())))))))))))
+                   (lambda (val enviro) (value (caddr expr) enviro 
+                                             (lambda (val2 enviro2) (k ((getOp (car expr)) val val2)
+                                                                       enviro2)))))))))
 
 (define getOp
   (lambda (op)
