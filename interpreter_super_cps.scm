@@ -55,9 +55,7 @@
     (cond
       ((null? stmnt) (error "null arg passed to assign"))
       ((null? (cddr stmnt)) (error "no value to assign"))
-      ((declared? (cadr stmnt) env) (value (caddr stmnt) env 
-                                           ;(lambda (val_caddr) (cons (car val_caddr) (cons (bind-deep (cadr stmnt) (car val_caddr) (cadr val_caddr)) '()))))))))
-                                           (lambda (val enviro) (k val (bind-deep (cadr stmnt) val enviro))))))))
+      ((declared? (cadr stmnt) env) (value (caddr stmnt) env (lambda (val enviro) (k val (bind-deep (cadr stmnt) val enviro))))))))
 
 (define pret-if
   (lambda (stmnt env ret brk cont)
@@ -103,13 +101,8 @@
       ((null? (cdr expr)) (value (car expr) env (lambda (vals enviro) (k vals enviro))))
       ((eq? '= (car expr)) (pret-assign expr env (lambda (vals enviro) (k vals enviro))))
       ((and (eq? '- (car expr)) (null? (cddr expr))) (value (cdr expr) env (lambda (vals enviro) (k (* -1 vals) enviro))))
-      (else (value (cadr expr) env
-                   ;(lambda (val_cadr) (value (caddr expr) (cadr val_cadr) 
-                    ;                         (lambda (val_caddr) (cons ((getOp (car expr)) (car val_cadr) (car val_caddr))
-                     ;                                                  (cons (cadr val_caddr) '())))))))))))
-                   (lambda (val enviro) (value (caddr expr) enviro 
-                                             (lambda (val2 enviro2) (k ((getOp (car expr)) val val2)
-                                                                       enviro2)))))))))
+      (else (value (cadr expr) env (lambda (val enviro) (value (caddr expr) enviro 
+                                             (lambda (val2 enviro2) (k ((getOp (car expr)) val val2) enviro2)))))))))
 
 (define getOp
   (lambda (op)
@@ -119,9 +112,6 @@
       ((eq? '* op) *)
       ((eq? '/ op) quotient)
       ((eq? '% op) remainder)
-      ((eq? '|| op) (lambda (b1 b2) (or b1 b2)));for some reason just returning or gives a syntax error
-      ((eq? '&& op) (lambda (b1 b2) (and b1 b2)));for some reason just returning and gives a syntax error
-      ((eq? '! op) not)
       (else (getBool op)))))
 
 (define operator?
