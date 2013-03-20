@@ -41,7 +41,11 @@
 
 (define pret-return
   (lambda (stmnt env)
-    (value (cadr stmnt) env (lambda (val enviro) val))))
+    (value (cadr stmnt) env (lambda (val enviro) 
+                              (cond
+                                ((eq? val #t) 'true)
+                                ((eq? val #f) 'false)
+                                (else val))))))
 
 (define pret-declare
   (lambda (stmnt env)
@@ -97,9 +101,12 @@
   (lambda (expr env k)
     (cond
       ((or (number? expr) (boolean? expr)) (k expr env))
+      ((eq? expr 'false) (k #f env))
+      ((eq? expr 'true) (k #t env))
       ((not (pair? expr)) (k (lookup expr env) env))
       ((null? (cdr expr)) (value (car expr) env (lambda (vals enviro) (k vals enviro))))
       ((eq? '= (car expr)) (pret-assign expr env (lambda (vals enviro) (k vals enviro))))
+      ((eq? '! (car expr)) (value (cdr expr) env (lambda (vals enviro) (k (not vals) enviro))))
       ((and (eq? '- (car expr)) (null? (cddr expr))) (value (cdr expr) env (lambda (vals enviro) (k (* -1 vals) enviro))))
       (else (value (cadr expr) env (lambda (val enviro) (value (caddr expr) enviro 
                                              (lambda (val2 enviro2) (k ((getOp (car expr)) val val2) enviro2)))))))))
@@ -142,7 +149,7 @@
 (define lookup
   (lambda (var env)
     (cond
-      ((null? env) (error "variable not declared"))
+      ((null? env) (error "var not declared"))
       ((not (null? (lookvar var (caar env) (cadar env)))) (lookvar var (caar env) (cadar env)))
       (else (lookup var (cdr env))))))
 
@@ -152,7 +159,7 @@
       ((null? varlist) '())
       ((eq? var (car varlist))
        (cond
-         ((null? (car vallist)) (error "variable declared but not initialized"))
+         ((null? (unbox (car vallist))) (error "variable declared but not initialized"))
          (else (unbox (car vallist)))))
       (else (lookvar var (cdr varlist) (cdr vallist))))))
 
