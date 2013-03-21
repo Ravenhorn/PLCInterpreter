@@ -121,19 +121,6 @@
       ((eq? '% op) remainder)
       (else (getBool op)))))
 
-(define operator?
-  (lambda (op)
-    (cond
-      ((eq? '+ op) #t)
-      ((eq? '- op) #t)
-      ((eq? '* op) #t)
-      ((eq? '/ op) #t)
-      ((eq? '% op) #t)
-      ((eq? '|| op) #t)
-      ((eq? '&& op) #t)
-      ((eq? '! op) #t)
-      (else #f))))
-
 (define new-env
   (lambda ()
     '((() ())) ))
