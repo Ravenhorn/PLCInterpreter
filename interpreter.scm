@@ -27,6 +27,8 @@
       ((eq? 'break (car stmnt)) (brk env))
       ((eq? 'continue (car stmnt)) (cont env))
       ((eq? 'begin (car stmnt)) (interpret-sl (cdr stmnt) env ret brk cont))
+      ((eq? 'function (car stmnt)) (pret-func stmnt env ret))
+      ((eq? 'funcall (car stmnt)) (pret-funcall stmnt env ret))
       (else (error "invalid parse tree")))))
 
 (define pret-while
@@ -82,6 +84,20 @@
              (cond
                ((null? (cddr if)) (k ((getBool (car if)) val) enviro))
                (else (value (caddr if) enviro (lambda (val2 enviro2) (k ((getBool (car if)) val val2) enviro2)))))))))
+
+(define pret-func
+  (lambda (stmnt env ret)
+    (cond
+      ((eq? 'main (cadr stmnt)) (interpret-sl (cadddr stmnt) env ret '() '()))
+      (else (bind-func (cdr stmnt) env)))))
+
+(define pret-funcall
+  (lambda (stmnt env ret)
+    (fnLookup (cadr stmnt) (lambda (func)
+                             (cond
+                               ((not (eq? (length (cddr stmnt)) (length (cadr func)))) (error "incorrect number of args"))
+                               (else (ret (pop-frame (call/cc (lambda (fnret)
+                                                                (interpret-sl (caddr func) (bind-list (cddr stmnt) (cadr func) (push-frame env)) fnret '() '())))))))))))
                                       
 (define getBool
   (lambda (op)
@@ -144,7 +160,9 @@
 
 (define pop-frame
   (lambda (env)
-    (cdr env)))
+    (cond
+      ((not (list? (car env))) (cons (car env) (cddr env)))
+      (else (cdr env)))))
 
 (define lookup
   (lambda (var env)
@@ -163,6 +181,13 @@
          (else (unbox (car vallist)))))
       (else (lookvar var (cdr varlist) (cdr vallist))))))
 
+(define fnLookup
+  (lambda (name env)
+    (cond
+      ((null? env) (error "function not declared"))
+      ((eq? (caar env) name) (car env))
+      (else (fnLookup name (cdr env))))))
+
 (define bind
   (lambda (var val env)
     (cond
@@ -175,6 +200,10 @@
       ((null? env) '())
       ((declared? var (cons (car env) '())) (bind var val env))
       (else (cons (car env) (bind-deep var val (cdr env)))))))
+
+(define bind-func
+  (lambda (func env)
+    (cons func env)))
 
 (define declared?
   (lambda (var env)
