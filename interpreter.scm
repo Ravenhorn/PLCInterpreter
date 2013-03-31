@@ -2,7 +2,32 @@
 ;Stuart Long and Jason Kuster
 ;EECS 345 Interpreter 2
 
-(load "loopSimpleParser.scm")
+(load "functionParser.scm")
+
+(define top-interpret
+  (lambda (filename)
+    (call/cc (lambda (ret)
+               (interpret-sl (cadr (lookup 'main (interpret-global-sl (parser filename) (new-env)))) (interpret-global-sl (parser filename) (new-env)) ret(lambda (env) (error("break called outside of a loop"))) (lambda (env)(error("continue called outside of a loop"))))))))
+
+(define interpret-global-sl
+  (lambda (ptree env)
+    (cond
+      ((null? ptree) env)
+      (else (interpret-global-sl (cdr ptree) (interpret-global (car ptree) env))))))
+
+(define interpret-global
+  (lambda (stmnt env)
+    (cond
+      ((eq? 'var (car stmnt)) (pret-declare stmnt env))
+      ((eq? 'function (car stmnt)) (pret-func-def stmnt env))
+      (else (error "invalid global parse tree")))))
+
+(define pret-func-def
+  (lambda (stmnt env)
+    (bind (cadr stmnt) 
+          (cons (caddr stmnt) (cons (cadddr stmnt) (cons ;(lambda (v) (get-func-env v))<--handle recursion
+                                                   env '()))) env)))
+
 
 (define interpret
   (lambda (filename)
@@ -27,7 +52,23 @@
       ((eq? 'break (car stmnt)) (brk env))
       ((eq? 'continue (car stmnt)) (cont env))
       ((eq? 'begin (car stmnt)) (interpret-sl (cdr stmnt) env ret brk cont))
+      ((eq? 'funcall (car stmnt)) (pret-funcall stmnt env))
       (else (error "invalid parse tree")))))
+
+(define pret-funcall
+  (lambda (stmnt env)
+    (call/cc (lambda (ret)
+               (interpret-sl (cadr (lookup (cadr stmnt))) (setup-func-env stmnt env) ret (lambda (env) (error("break called outside of a loop"))) (lambda (env)(error("continue called outside of a loop"))))))))
+
+(define setup-func-env
+  (lambda (stmnt env)
+    (assign-args (car (lookup (cadr stmnt))) (caddr stmnt) (caddr (lookup (cadr stmnt))) env)))
+
+(define assign-args
+  (lambda (params args func_env old_env)
+    (cond
+      ((null? params) func_env)
+      (else (assign-args (cdr params) (cdr args) (value (car args) old_env (lambda (val env) (bind (car params) val env))) env))))) ;needs work but I had to go
 
 (define pret-while
   (lambda (stmnt enviro return)
@@ -106,6 +147,7 @@
       ((not (pair? expr)) (k (lookup expr env) env))
       ((null? (cdr expr)) (value (car expr) env (lambda (vals enviro) (k vals enviro))))
       ((eq? '= (car expr)) (pret-assign expr env (lambda (vals enviro) (k vals enviro))))
+      ((eq? 'funcall (car expr)) (k (pret-funcall expr env) env))
       ((eq? '! (car expr)) (value (cdr expr) env (lambda (vals enviro) (k (not vals) enviro))))
       ((and (eq? '- (car expr)) (null? (cddr expr))) (value (cdr expr) env (lambda (vals enviro) (k (* -1 vals) enviro))))
       (else (value (cadr expr) env (lambda (val enviro) (value (caddr expr) enviro 
@@ -152,9 +194,11 @@
 
 (define bind
   (lambda (var val env)
-    (cond
-      ((or (or (number? val) (boolean? val)) (null? val)) (cons (cons (cons var (caar env)) (cons (cons (box val) (cadar env)) '())) (cdr env)))
-      (else (error "invalid type, variables must be an integer or boolean")))))
+    (cons (cons (cons var (caar env)) (cons (cons (box val) (cadar env)) '())) (cdr env))))
+    ;(cond
+      ;((or (or (number? val) (boolean? val)) (null? val)) (cons (cons (cons var (caar env)) (cons (cons (box val) (cadar env)) '())) (cdr env)))
+      
+     ; (else (error "invalid type, variables must be an integer or boolean")))))
 
 (define bind-deep
   (lambda (var val env)
