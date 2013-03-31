@@ -205,6 +205,12 @@
   (lambda (func env)
     (cons func env)))
 
+(define bind-list
+  (lambda (varlist vallist env)
+    (cond
+      ((null? varlist) env)
+      (else (bind-list (cdr varlist) (cdr vallist) (bind (car varlist) (car vallist) env))))))
+
 (define declared?
   (lambda (var env)
     (cond
