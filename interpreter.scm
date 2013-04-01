@@ -13,9 +13,9 @@
   (lambda (ptree env k)
     (cond
       ((null? ptree) (k env))
-      (else (interpret-global-sl (cdr ptree) (interpret-global (car ptree) env) (lambda (v) (k v)))))))
+      (else (interpret-global-sl (cdr ptree) (interpret-global-stmnt (car ptree) env) (lambda (v) (k v)))))))
 
-(define interpret-global
+(define interpret-global-stmnt
   (lambda (stmnt env)
     (cond
       ((eq? 'var (car stmnt)) (pret-declare stmnt env))
@@ -204,7 +204,7 @@
 (define bind-deep
   (lambda (var val env)
     (cond
-      ((null? env) '())
+      ((null? env) '());shouldn't this error out?
       ;((declared? var (cons (car env) '())) (bind var val env))
       ((declared? var (cons (car env) '())) (handle-box var val (car env) (lambda (val enviro) env)))
       (else (cons (car env) (bind-deep var val (cdr env)))))))
