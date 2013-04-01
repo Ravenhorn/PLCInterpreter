@@ -4,10 +4,10 @@
 
 (load "functionParser.scm")
 
-(define top-interpret
+(define interpret
   (lambda (filename)
     (call/cc (lambda (ret)
-               (interpret-sl (cadr (lookup 'main (interpret-global-sl (parser filename) (new-env)))) (interpret-global-sl (parser filename) (new-env)) ret(lambda (env) (error("break called outside of a loop"))) (lambda (env)(error("continue called outside of a loop"))))))))
+               (interpret-sl (cadr (lookup 'main (interpret-global-sl (parser filename) (new-env)))) (interpret-global-sl (parser filename) (new-env)) ret (lambda (env) (error("break called outside of a loop"))) (lambda (env)(error("continue called outside of a loop"))))))))
 
 (define interpret-global-sl
   (lambda (ptree env)
@@ -27,12 +27,10 @@
     (bind (cadr stmnt) 
           (cons (caddr stmnt) (cons (cadddr stmnt) (cons ;(lambda (v) (get-func-env v))<--handle recursion
                                                    env '()))) env)))
-
-
-(define interpret
-  (lambda (filename)
-    (call/cc (lambda (ret)
-               (interpret-sl (parser filename) (new-env) ret (lambda (env) (error("break called outside of a loop"))) (lambda (env)(error("continue called outside of a loop"))))))))
+;(define interpret
+ ; (lambda (filename)
+ ;   (call/cc (lambda (ret)
+ ;              (interpret-sl (parser filename) (new-env) ret (lambda (env) (error("break called outside of a loop"))) (lambda (env)(error("continue called outside of a loop"))))))))
 
 (define interpret-sl
   (lambda (ptree env ret brk cont)
@@ -52,13 +50,13 @@
       ((eq? 'break (car stmnt)) (brk env))
       ((eq? 'continue (car stmnt)) (cont env))
       ((eq? 'begin (car stmnt)) (interpret-sl (cdr stmnt) env ret brk cont))
-      ((eq? 'funcall (car stmnt)) (pret-funcall stmnt env))
+      ((eq? 'funcall (car stmnt)) (pret-funcall stmnt env (lambda (retval) env)))
       (else (error "invalid parse tree")))))
 
 (define pret-funcall
-  (lambda (stmnt env)
-    (call/cc (lambda (ret)
-               (interpret-sl (cadr (lookup (cadr stmnt) env)) (setup-func-env stmnt env) ret (lambda (env) (error("break called outside of a loop"))) (lambda (env)(error("continue called outside of a loop"))))))))
+  (lambda (stmnt env k)
+    (k (call/cc (lambda (ret)
+               (interpret-sl (cadr (lookup (cadr stmnt) env)) (setup-func-env stmnt env) ret (lambda (env) (error("break called outside of a loop"))) (lambda (env)(error("continue called outside of a loop")))))))))
 
 (define setup-func-env
   (lambda (stmnt env)
@@ -148,7 +146,7 @@
       ((not (pair? expr)) (k (lookup expr env) env))
       ((null? (cdr expr)) (value (car expr) env (lambda (vals enviro) (k vals enviro))))
       ((eq? '= (car expr)) (pret-assign expr env (lambda (vals enviro) (k vals enviro))))
-      ((eq? 'funcall (car expr)) (k (pret-funcall expr env) env))
+      ((eq? 'funcall (car expr)) (k (pret-funcall expr env (lambda (retval) retval)) env))
       ((eq? '! (car expr)) (value (cdr expr) env (lambda (vals enviro) (k (not vals) enviro))))
       ((and (eq? '- (car expr)) (null? (cddr expr))) (value (cdr expr) env (lambda (vals enviro) (k (* -1 vals) enviro))))
       (else (value (cadr expr) env (lambda (val enviro) (value (caddr expr) enviro 
