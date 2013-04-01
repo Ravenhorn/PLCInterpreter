@@ -102,6 +102,7 @@
       ((null? stmnt) (error "null arg passed to assign"))
       ((null? (cddr stmnt)) (error "no value to assign"))
       ((declared? (cadr stmnt) env) (value (caddr stmnt) env (lambda (val enviro) (k val (bind-deep (cadr stmnt) val enviro))))))))
+;why isn't there an else here?
 
 (define pret-if
   (lambda (stmnt env ret brk cont)
