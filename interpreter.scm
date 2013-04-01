@@ -63,12 +63,14 @@
 (define setup-func-env
   (lambda (stmnt env)
     ;(error stmnt)))
-    (assign-args (car (lookup (cadr stmnt) env)) (cddr stmnt) ((caddr (lookup (cadr stmnt) env)) env) env)))
+    (assign-args (car (lookup (cadr stmnt) env)) (cddr stmnt) ((caddr (lookup (cadr stmnt) env)) ;this last arg returns a get-func-env procedure
+                                                               env) env))) 
 
 (define assign-args
   (lambda (params args func_env old_env)
     (cond
       ((null? params) func_env)
+      ((eq? '& (car params)) (assign-args (cddr params) (cdr args) (bind-box (cadr params) (get-box-for-ref (car args) old_env) func_env) old_env))
       (else (value (car args) old_env (lambda (val env) (assign-args (cdr params) (cdr args) (bind (car params) val func_env) env)))))))
 
 (define pret-while
@@ -101,8 +103,8 @@
     (cond
       ((null? stmnt) (error "null arg passed to assign"))
       ((null? (cddr stmnt)) (error "no value to assign"))
-      ((declared? (cadr stmnt) env) (value (caddr stmnt) env (lambda (val enviro) (k val (bind-deep (cadr stmnt) val enviro))))))))
-;why isn't there an else here?
+      ((declared? (cadr stmnt) env) (value (caddr stmnt) env (lambda (val enviro) (k val (bind-deep (cadr stmnt) val enviro)))))
+      (else (error "variable not declared")))))
 
 (define pret-if
   (lambda (stmnt env ret brk cont)
@@ -219,6 +221,18 @@
       ((null? vars) (error "couldn't find box"))
       ((eq? var (car vars)) (car vals))
       (else (get-box var (cdr vars) (cdr vals))))))
+
+(define get-box-for-ref
+  (lambda (var env)
+    (cond
+      ((null? env) (error "var not declared"))
+      ((pair? var) (error "only variables can be passed by reference"))
+      ((declared? var (cons (car env) '())) (get-box var (caar env) (cadar env)))
+      (else (get-box-for-ref var (cdr env))))))
+
+(define bind-box
+  (lambda (var box_val env)
+    (cons (cons (cons var (caar env)) (cons (cons box_val (cadar env)) '())) (cdr env))))
 
 (define declared?
   (lambda (var env)
