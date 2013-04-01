@@ -58,17 +58,18 @@
 (define pret-funcall
   (lambda (stmnt env)
     (call/cc (lambda (ret)
-               (interpret-sl (cadr (lookup (cadr stmnt))) (setup-func-env stmnt env) ret (lambda (env) (error("break called outside of a loop"))) (lambda (env)(error("continue called outside of a loop"))))))))
+               (interpret-sl (cadr (lookup (cadr stmnt) env)) (setup-func-env stmnt env) ret (lambda (env) (error("break called outside of a loop"))) (lambda (env)(error("continue called outside of a loop"))))))))
 
 (define setup-func-env
   (lambda (stmnt env)
-    (assign-args (car (lookup (cadr stmnt))) (caddr stmnt) (caddr (lookup (cadr stmnt))) env)))
+    ;(error stmnt)))
+    (assign-args (car (lookup (cadr stmnt) env)) (cddr stmnt) (caddr (lookup (cadr stmnt) env)) env)))
 
 (define assign-args
   (lambda (params args func_env old_env)
     (cond
       ((null? params) func_env)
-      (else (assign-args (cdr params) (cdr args) (value (car args) old_env (lambda (val env) (bind (car params) val env))) env))))) ;needs work but I had to go
+      (else (value (car args) old_env (lambda (val env) (assign-args (cdr params) (cdr args) (bind (car params) val func_env) env)))))))
 
 (define pret-while
   (lambda (stmnt enviro return)
