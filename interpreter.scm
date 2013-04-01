@@ -226,7 +226,7 @@
   (lambda (var env)
     (cond
       ((null? env) (error "var not declared"))
-      ((pair? var) (error "only variables can be passed by reference"))
+      ((or (pair? var) (boolean? var) (number? var)) (error "only variables can be passed by reference"))
       ((declared? var (cons (car env) '())) (get-box var (caar env) (cadar env)))
       (else (get-box-for-ref var (cdr env))))))
 
