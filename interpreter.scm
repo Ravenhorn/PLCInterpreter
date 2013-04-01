@@ -1,19 +1,19 @@
 ;KALAA Interpreter
 ;Stuart Long and Jason Kuster
-;EECS 345 Interpreter 2
-
+;EECS 345 Interpreter 3
 (load "functionParser.scm")
 
 (define interpret
   (lambda (filename)
     (call/cc (lambda (ret)
-               (interpret-sl (cadr (lookup 'main (interpret-global-sl (parser filename) (new-env)))) (interpret-global-sl (parser filename) (new-env)) ret (lambda (env) (error("break called outside of a loop"))) (lambda (env)(error("continue called outside of a loop"))))))))
+               ;(interpret-sl (cadr (lookup 'main (interpret-global-sl (parser filename) (new-env)))) (interpret-global-sl (parser filename) (new-env)) ret (lambda (env) (error("break called outside of a loop"))) (lambda (env)(error("continue called outside of a loop"))))))))
+               (interpret-global-sl (parser filename) (new-env) (lambda (v) (interpret-sl (cadr (lookup 'main v)) v ret (lambda (env) (error("break called outside of a loop"))) (lambda (env)(error("continue called outside of a loop"))))))))))
 
 (define interpret-global-sl
-  (lambda (ptree env)
+  (lambda (ptree env k)
     (cond
-      ((null? ptree) env)
-      (else (interpret-global-sl (cdr ptree) (interpret-global (car ptree) env))))))
+      ((null? ptree) (k env))
+      (else (interpret-global-sl (cdr ptree) (interpret-global (car ptree) env) (lambda (v) (k v)))))))
 
 (define interpret-global
   (lambda (stmnt env)
@@ -199,7 +199,6 @@
     (cons (cons (cons var (caar env)) (cons (cons (box val) (cadar env)) '())) (cdr env))))
     ;(cond
       ;((or (or (number? val) (boolean? val)) (null? val)) (cons (cons (cons var (caar env)) (cons (cons (box val) (cadar env)) '())) (cdr env)))
-      
      ; (else (error "invalid type, variables must be an integer or boolean")))))
 
 (define bind-deep
