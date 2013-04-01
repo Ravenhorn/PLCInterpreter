@@ -27,9 +27,11 @@
     (bind (cadr stmnt) 
           (cons (caddr stmnt) (cons (cadddr stmnt) (cons ;(lambda (v) (get-func-env v))<--handle recursion
                                                    env '()))) env)))
+;old interpret
 ;(define interpret
  ; (lambda (filename)
  ;   (call/cc (lambda (ret)
+
  ;              (interpret-sl (parser filename) (new-env) ret (lambda (env) (error("break called outside of a loop"))) (lambda (env)(error("continue called outside of a loop"))))))))
 
 (define interpret-sl
@@ -203,8 +205,20 @@
   (lambda (var val env)
     (cond
       ((null? env) '())
-      ((declared? var (cons (car env) '())) (bind var val env))
+      ;((declared? var (cons (car env) '())) (bind var val env))
+      ((declared? var (cons (car env) '())) (handle-box var val (car env) (lambda (val enviro) env)))
       (else (cons (car env) (bind-deep var val (cdr env)))))))
+
+(define handle-box
+  (lambda (var val env k)
+    (k (set-box! (get-box var (car env) (cadr env)) val) env)))
+
+(define get-box
+  (lambda (var vars vals)
+    (cond
+      ((null? vars) (error "couldn't find box"))
+      ((eq? var (car vars)) (car vals))
+      (else (get-box var (cdr vars) (cdr vals))))))
 
 (define declared?
   (lambda (var env)
