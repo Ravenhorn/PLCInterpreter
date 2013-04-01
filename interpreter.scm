@@ -24,9 +24,9 @@
 
 (define pret-func-def
   (lambda (stmnt env)
-    (bind (cadr stmnt) 
-          (cons (caddr stmnt) (cons (cadddr stmnt) (cons ;(lambda (v) (get-func-env v))<--handle recursion
-                                                   env '()))) env)))
+    (bind (cadr stmnt)
+          (cons (caddr stmnt) (cons (cadddr stmnt) (cons (lambda (v) (get-func-env v));<--handle recursion
+                                                   '()))) env)))
 ;old interpret
 ;(define interpret
  ; (lambda (filename)
@@ -63,7 +63,7 @@
 (define setup-func-env
   (lambda (stmnt env)
     ;(error stmnt)))
-    (assign-args (car (lookup (cadr stmnt) env)) (cddr stmnt) (caddr (lookup (cadr stmnt) env)) env)))
+    (assign-args (car (lookup (cadr stmnt) env)) (cddr stmnt) ((caddr (lookup (cadr stmnt) env)) env) env)))
 
 (define assign-args
   (lambda (params args func_env old_env)
@@ -136,7 +136,7 @@
       ((eq? '<= op) <=)
       ((eq? '>= op) >=)
       ((eq? '|| op) (lambda (b1 b2) (or b1 b2)));for some reason just returning or gives a syntax error
-      ((eq? '&& op) (lambda (b1 b2) (and b1 b2)));for some reason just returning or gives a syntax error
+      ((eq? '&& op) (lambda (b1 b2) (and b1 b2)));for some reason just returning and gives a syntax error
       ((eq? '! op) not)
       (else (error "invalid operator")))))
 
@@ -228,3 +228,9 @@
       ((eq? (car env) var) #t)
       ((and (list? (car env)) (declared? var (car env))) #t)
       (else (declared? var (cdr env))))))
+
+(define get-func-env
+  (lambda (env)
+    (cond
+      ((null? (cdr env)) env)
+      (else (get-func-env (cdr env))))))
