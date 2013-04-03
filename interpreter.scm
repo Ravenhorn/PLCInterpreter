@@ -6,8 +6,8 @@
 (define interpret
   (lambda (filename)
     (call/cc (lambda (ret)
-               ;(interpret-sl (cadr (lookup 'main (interpret-global-sl (parser filename) (new-env)))) (interpret-global-sl (parser filename) (new-env)) ret (lambda (env) (error("break called outside of a loop"))) (lambda (env)(error("continue called outside of a loop"))))))))
-               (interpret-global-sl (parser filename) (new-env) (lambda (v) (interpret-sl (cadr (lookup 'main v)) v ret (lambda (env) (error("break called outside of a loop"))) (lambda (env)(error("continue called outside of a loop"))))))))))
+               ;(interpret-sl (cadr (lookup 'main (interpret-global-sl (parser filename) (new-env)))) (interpret-global-sl (parser filename) (new-env)) ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop")))))))
+               (interpret-global-sl (parser filename) (new-env) (lambda (v) (interpret-sl (cadr (lookup 'main v)) v ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop")))))))))
 
 (define interpret-global-sl
   (lambda (ptree env k)
@@ -32,7 +32,7 @@
  ; (lambda (filename)
  ;   (call/cc (lambda (ret)
 
- ;              (interpret-sl (parser filename) (new-env) ret (lambda (env) (error("break called outside of a loop"))) (lambda (env)(error("continue called outside of a loop"))))))))
+ ;              (interpret-sl (parser filename) (new-env) ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop")))))))
 
 (define interpret-sl
   (lambda (ptree env ret brk cont)
@@ -58,7 +58,7 @@
 (define pret-funcall
   (lambda (stmnt env k)
     (k (call/cc (lambda (ret)
-               (interpret-sl (cadr (lookup (cadr stmnt) env)) (setup-func-env stmnt env) ret (lambda (env) (error("break called outside of a loop"))) (lambda (env)(error("continue called outside of a loop")))))))))
+               (interpret-sl (cadr (lookup (cadr stmnt) env)) (setup-func-env stmnt env) ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop"))))))))
 
 (define setup-func-env
   (lambda (stmnt env)
