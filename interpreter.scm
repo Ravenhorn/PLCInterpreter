@@ -41,10 +41,10 @@
       ((eq? 'var (car stmnt)) (pret-declare stmnt env))
       ((eq? 'if (car stmnt)) (pret-if stmnt env ret brk cont))
       ((eq? 'return (car stmnt)) (ret (pret-return stmnt env)))
-      ((eq? 'while (car stmnt)) (pret-while stmnt env ret))
+      ((eq? 'while (car stmnt)) (pop-frame (pret-while stmnt (push-frame env) ret)))
       ((eq? 'break (car stmnt)) (brk env))
       ((eq? 'continue (car stmnt)) (cont env))
-      ((eq? 'begin (car stmnt)) (interpret-sl (cdr stmnt) env ret brk cont))
+      ((eq? 'begin (car stmnt)) (pop-frame (interpret-sl (cdr stmnt) (push-frame env) ret brk cont)))
       ((eq? 'funcall (car stmnt)) (pret-funcall stmnt env (lambda (retval) env)))
       (else (error "invalid parse tree")))))
 
@@ -71,9 +71,9 @@
                (letrec ((loop (lambda (cond body env)
                                 (eval-if cond env (lambda (if1 if_enviro)
                                                     (if  if1
-                                                        (loop cond body (interpret-stmnt body if_enviro return break (lambda (e) (loop cond body e))))
+                                                        (loop cond body (interpret-stmnt body if_enviro return break (lambda (e) (break (loop cond body (pop-frame e))))))
                                                         env))))))
-                        (pop-frame (loop (cadr stmnt) (caddr stmnt) (push-frame enviro))))))))
+                  (loop (cadr stmnt) (caddr stmnt) enviro))))))
 
 (define pret-return
   (lambda (stmnt env)
@@ -114,11 +114,15 @@
 
 (define eval-if
   (lambda (if env k)
-    (value (cadr if) env
-           (lambda (val enviro)
-             (cond
-               ((null? (cddr if)) (k ((getBool (car if)) val) enviro))
-               (else (value (caddr if) enviro (lambda (val2 enviro2) (k ((getBool (car if)) val val2) enviro2)))))))))
+    (cond
+      ((list? if)
+       (value (cadr if) env
+              (lambda (val enviro)
+                (cond
+                  ((null? (cddr if)) (k ((getBool (car if)) val) enviro))
+                  (else (value (caddr if) enviro (lambda (val2 enviro2) (k ((getBool (car if)) val val2) enviro2))))))))
+      (else
+       (k if env)))))
                                       
 (define getBool
   (lambda (op)
