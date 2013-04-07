@@ -195,7 +195,11 @@
 (define bind-deep
   (lambda (var val env)
     (cond
+<<<<<<< HEAD
       ((null? env) (error "null env"))
+=======
+      ((null? env) '());shouldn't this error out?
+>>>>>>> e3358054a95c999ce1cc81f2ddf2877e2e86ac0a
       ((declared? var (cons (car env) '())) (handle-box var val (car env) (lambda (val enviro) env)))
       (else (cons (car env) (bind-deep var val (cdr env)))))))
 
