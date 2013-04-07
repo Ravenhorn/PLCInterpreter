@@ -24,7 +24,8 @@
 (define pret-func-def
   (lambda (stmnt env)
     (bind (cadr stmnt)
-          (cons (caddr stmnt) (cons (cadddr stmnt) (cons (lambda (v) (get-func-env v));<--handle recursion
+          (cons (caddr stmnt) (cons (cadddr stmnt) (cons (lambda (v) (get-func-env v)) ;<--handle recursion
+                                                         '()))) env)))
 
 (define interpret-sl
   (lambda (ptree env ret brk cont)
@@ -194,7 +195,7 @@
 (define bind-deep
   (lambda (var val env)
     (cond
-      ((null? env) '());shouldn't this error out?
+      ((null? env) (error "null environment"));shouldn't this error out?
       ((declared? var (cons (car env) '())) (handle-box var val (car env) (lambda (val enviro) env)))
       (else (cons (car env) (bind-deep var val (cdr env)))))))
 
