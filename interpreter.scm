@@ -176,11 +176,26 @@
     (cdr env)))
 
 (define lookup
-  (lambda (var env)
+  (lambda (var env class instance)
     (cond
-      ((null? env) (error "var not declared"))
-      ((not (null? (lookvar var (caar env) (cadar env)))) (lookvar var (caar env) (cadar env)))
-      (else (lookup var (cdr env))))))
+      ((not (null? env)) (lookup-env var env (lambda (val)
+                                               (cond
+                                                 ((not (null? val)) (val))
+                                                 (else (lookup-ci var class instance (lambda (val)
+                                                                                       (cond
+                                                                                         ((null? val) (error "Variable not declared"))
+                                                                                         (else val)))))))))
+      (else (lookup-ci var class instance (lambda (val)
+                                            (cond
+                                              ((null? val) (error "Variable not declared"))
+                                              (else val))))))))
+
+(define lookup-env
+  (lambda (var env k)
+    (cond
+      ((null? env) '())
+      ((not (null? (k (lookvar var (caar env) (cadar env)))) (lookvar var (caar env) (cadar env))))
+      (else (k (lookup var (cdr env)))))))
 
 (define lookvar
   (lambda (var varlist vallist)
@@ -188,9 +203,14 @@
       ((null? varlist) '())
       ((eq? var (car varlist))
        (cond
-         ((null? (unbox (car vallist))) (error "variable declared but not initialized"))
+         ((null? (unbox (car vallist))) (error "variable/method declared but not initialized"))
          (else (unbox (car vallist)))))
       (else (lookvar var (cdr varlist) (cdr vallist))))))
+
+(define lookup-ci
+  (lambda (var class instance)
+    (cond
+      (
 
 (define bind
   (lambda (var val env)
