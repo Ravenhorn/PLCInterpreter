@@ -1,25 +1,53 @@
 ;KALAA Interpreter
 ;Stuart Long and Jason Kuster
 ;EECS 345 Interpreter 3
-(load "functionParser.scm")
+(load "classParser.scm")
 
-(define interpret
+(define interpret-class
   (lambda (filename)
     (call/cc (lambda (ret)
-               (interpret-global-sl (parser filename) (new-env) (lambda (v) (interpret-sl (cadr (lookup 'main v)) v ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop")))))))))
+               (interpret-class-sl (parser filename) (new-env))))))
 
-(define interpret-global-sl
-  (lambda (ptree env k)
+(define interpret-class-sl
+  (lambda (ptree env) 
     (cond
-      ((null? ptree) (k env))
-      (else (interpret-global-sl (cdr ptree) (interpret-global-stmnt (car ptree) env) (lambda (v) (k v)))))))
+      ((null? ptree) env)
+      (else (interpret-class-sl (cdr ptree) (bind (cadar ptree) (interpret-class-body (get-class-body (car ptree)) (new-class-env (get-parent-name (car ptree)))) env))))))
+  
+(define get-class-body
+  (lambda (class)
+    (cadddr class)))
+     
+(define get-parent-name
+  (lambda (class)
+    (cond
+      ((null? (caddr class)) '())
+      (else (cadr (caddr class))))))
 
-(define interpret-global-stmnt
+;(define interpret
+ ; (lambda (filename)
+  ;  (call/cc (lambda (ret)
+   ;            (interpret-global-sl (parser filename) (new-env) (lambda (v) (interpret-sl (cadr (lookup 'main v)) v ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop")))))))))
+
+(define interpret-class-body
+  (lambda (ptree env)
+    (cond
+      ((null? ptree) env)
+      (else (interpret-class-body (cdr ptree) (interpret-class-stmnt (car ptree) env))))))
+
+(define interpret-class-stmnt-help
+  (lambda (ptree env)
+    (cond
+      ((null? ptree) env)
+      (else (interpret-class-stmnt (car ptree) env)))))
+
+(define interpret-class-stmnt
   (lambda (stmnt env)
     (cond
-      ((eq? 'var (car stmnt)) (pret-declare stmnt env))
-      ((eq? 'function (car stmnt)) (pret-func-def stmnt env))
-      (else (error "invalid global parse tree")))))
+      ((eq? 'static-var (car stmnt)) (cons (pret-declare stmnt (car env)) (cdr env)))
+      ((eq? 'static-function (car stmnt)) (cons (car env) (cons (cadr env) (cons (pret-func-def stmnt (caddr env)) (cdddr env)))))
+      (else (error (car stmnt))))))
+      ;(else (error "invalid global parse tree")))))
 
 (define pret-func-def
   (lambda (stmnt env)
@@ -240,3 +268,7 @@
     (cond
       ((null? (cdr env)) env)
       (else (get-func-env (cdr env))))))
+
+(define new-class-env
+  (lambda (parent)
+    (cons (new-env) (cons (new-env) (cons (new-env) (cons parent '()))))))

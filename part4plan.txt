@@ -1,4 +1,4 @@
-Steps for part 4:
+Steps for part 4: (see below for a different list)
 
 1. Add class and object functions 
 	Class: 
@@ -43,3 +43,23 @@ Steps for part 4:
 			-if there is an instance lookup in the instance's class's method environment
 			-else lookup in function's class's method environment
 
+
+From the prompt:
+
+Write an interpreter that correctly handles classes, static variables, and static methods. You should be able to set value for variables, call methods, and use super.
+
+Recall the suggested order from lecture to attack the problem.
+
+Create helper functions to create a new class and instance (will be needed for part 5) and to access the portions of a class and instance.
+Everywhere when interpreting statements and expressions that an environment is passed as a parameter, you also have to pass parameters for class and instance.
+Change the top level interpreter code that you used in part 3 to return a class instead of returning an environment.
+Change the top level interpreter code that you wrote for part 3 to expect static and non-static declarations for variables and functions.
+Create a new top level for the interpreter that reads a list of class definitions, and stores each class with its definition in the environment.
+Create a function that takes a variable, a class, and an instance, and checks if the variable is in the list of class or instance variables and returns its value.
+Create a function that takes a variable, and environment, a class, and an instance, if the variable is in the environment, look it up, otherwise look in the class and instance variables.
+Create a function that takes the left hand side of a dot expression and returns a (class, instance) pair representing the class and instance of the left hand side.
+Create a function that takes a dot expression, calls the above function to evaluate the left hand side, and looks up the right hand side in the class/instance variables.
+Update your code that interprets a function definition to add a new function to the closure that looks up the function's class in the environment.
+Update the code that evaluates a function call to deal with objects and classes.
+Update the code that interprets an assignment statement so that it looks for the variable in the environment, class and instance variables
+Create a new interpret function.
