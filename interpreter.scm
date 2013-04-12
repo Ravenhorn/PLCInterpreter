@@ -4,7 +4,7 @@
 (load "classParser.scm")
 
 (define interpret-class
-  (lambda (filename)
+  (lambda (filename mainclass)
     (call/cc (lambda (ret)
                (interpret-class-sl (parser filename) (new-env))))))
 
@@ -45,9 +45,13 @@
   (lambda (stmnt env)
     (cond
       ((eq? 'static-var (car stmnt)) (cons (pret-declare stmnt (car env)) (cdr env)))
-      ((eq? 'static-function (car stmnt)) (cons (car env) (cons (cadr env) (cons (pret-func-def stmnt (caddr env)) (cdddr env)))))
-      (else (error (car stmnt))))))
-      ;(else (error "invalid global parse tree")))))
+      ((eq? 'static-function (car stmnt)) (insert-class-method (pret-func-def stmnt (caddr env)) env))
+      ;(else (error (car stmnt))))))
+      (else (error "invalid global parse tree")))))
+
+(define insert-class-method
+  (lambda (func_env class_env)
+    (cons (car class_env) (cons (cadr class_env) (cons func_env (cdddr class_env))))))
 
 (define pret-func-def
   (lambda (stmnt env)
@@ -237,8 +241,7 @@
 
 (define lookup-ci
   (lambda (var class instance)
-    (cond
-      (
+    '()))
 
 (define bind
   (lambda (var val env)

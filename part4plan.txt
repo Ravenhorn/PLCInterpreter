@@ -11,9 +11,9 @@ Steps for part 4: (see below for a different list)
 		a) instance variable values
 		b) true type class
 
-2. create a new top level interpreter that reads class definitions and stores them
+2. create a new top level interpreter that reads class definitions and stores them - DONE (mostly)
 
-3. change part 3's top level interpreter to read class body and return the class
+3. change part 3's top level interpreter to read class body and return the class - DONE (pretty much)
 
 *if a method is not static append this to the formal parameters
 
