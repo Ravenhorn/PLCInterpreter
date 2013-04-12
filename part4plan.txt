@@ -1,0 +1,45 @@
+Steps for part 4:
+
+1. Add class and object functions 
+	Class: 
+		a) class var environment
+		b) instance vars and initial value expression environment
+		c) method environment
+		d) parent class
+	
+	Object:
+		a) instance variable values
+		b) true type class
+
+2. create a new top level interpreter that reads class definitions and stores them
+
+3. change part 3's top level interpreter to read class body and return the class
+
+*if a method is not static append this to the formal parameters
+
+4. change part 2 of interpreter
+	-each interpret function now takes a class and instance
+
+5. change how we lookup a name
+	a) take a name, class, instance
+		-lookup name in class and instance and return a val
+	b) take a env, class, instance
+		-lookup in the env first, then the class and instance
+
+6. handle dot expressions (e.g. a.x parsed as (dot a x))
+	-evaluate the left side to get class and instance
+
+7. update interpret assignment to store the value in the class
+	variable, instance value, or current environment
+
+8. functions
+	a) functions definitions
+		-add a function that gets the owning class of the method to the closure
+
+	b) function calls
+		i) called with a dot
+			-eval left-hand of dot and lookup in class
+		ii) without a dot
+			-if there is an instance lookup in the instance's class's method environment
+			-else lookup in function's class's method environment
+
