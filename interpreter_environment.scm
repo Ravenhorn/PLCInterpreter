@@ -48,7 +48,7 @@
                        (lambda (v)
                          (cond
                            ((null? v) (lookup-class var class (lambda (v) v)))
-                           (else v))))))))
+                           (else v))))))
 
 (define lookup-class
   (lambda (var class k)
