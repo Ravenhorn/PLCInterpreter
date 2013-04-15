@@ -9,7 +9,7 @@
 (define interpret
   (lambda (filename mainclass)
     (call/cc (lambda (ret)
-               (interpret-class-sl (parser filename) (new-env) (lambda (v) (interpret-sl (cadr (lookup 'main '() (lookup mainclass v '() '()) '())) v (lookup mainclass v '() '()) ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop")))))))))
+               (interpret-class-sl (parser filename) (new-env) (lambda (v) (interpret-sl (cadr (lookup 'main '() (lookup mainclass v '() '()) '())) v (lookup mainclass v '() '()) '() ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop")))))))))
 
 (define interpret-class-sl
   (lambda (ptree env k) 
@@ -32,6 +32,6 @@
   (lambda (stmnt env name)
     (cond
       ((eq? 'static-var (car stmnt)) (cons (pret-declare stmnt (car env) '() '()) (cdr env))) ;TODO are we sure about passing nulls to pret-declare?
-      ((eq? 'static-function (car stmnt)) (insert-class-method (pret-func-def stmnt (caddr env) name) env));ditto as above
+      ((eq? 'static-function (car stmnt)) (insert-class-method (pret-func-def stmnt (caddr env) name) env))
       ;(else (error (car stmnt))))))
       (else (error "invalid global parse tree")))))
