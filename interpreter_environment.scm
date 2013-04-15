@@ -15,7 +15,7 @@
     (cond
       ((not (null? env)) (lookup-env var env (lambda (val)
                                                (cond
-                                                 ((not (null? val)) (val))
+                                                 ((not (null? val)) val)
                                                  (else (lookup-ci var class instance (lambda (val)
                                                                                        (cond
                                                                                          ((null? val) (error "Variable not declared"))
@@ -29,7 +29,7 @@
   (lambda (var env k)
     (cond
       ((null? env) '())
-      ((not (null? (k (lookvar var (caar env) (cadar env)))) (lookvar var (caar env) (cadar env))))
+      ((not (null? (k (lookvar var (caar env) (cadar env))))) (lookvar var (caar env) (cadar env)))
       (else (k (lookup var (cdr env)))))))
 
 (define lookvar
@@ -43,12 +43,12 @@
       (else (lookvar var (cdr varlist) (cdr vallist))))))
 
 (define lookup-ci
-  (lambda (var class instance)
+  (lambda (var class instance k)
     (lookup-instance var class instance
                        (lambda (v)
                          (cond
-                           ((null? v) (lookup-class var class (lambda (v) v)))
-                           (else v))))))
+                           ((null? v) (lookup-class var class (lambda (v) (k v))))
+                           (else (k v)))))))
 
 (define lookup-class
   (lambda (var class k)
@@ -110,6 +110,10 @@
     (cond
       ((null? (cdr env)) env)
       (else (get-func-env (cdr env))))))
+
+(define get-func-class
+  (lambda (name env)
+    (lookup name env '() '())))
 
 (define new-class-env
   (lambda (parent)

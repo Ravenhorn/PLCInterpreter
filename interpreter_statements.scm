@@ -19,7 +19,32 @@
       ((eq? 'continue (car stmnt)) (cont env))
       ((eq? 'begin (car stmnt)) (pop-frame (interpret-sl (cdr stmnt) (push-frame env) class instance ret brk cont)))
       ((eq? 'funcall (car stmnt)) (pret-funcall stmnt env class instance (lambda (retval) env)))
+      ;((eq? 'dot (car stmnt)) (pret-dot stmnt env class instance))
       (else (error "invalid parse tree")))))
+
+;k expects params class instance
+(define pret-dot
+  (lambda (stmnt env class instance k)
+    (handle-left (cadr stmnt) env class instance (lambda (c i) (k c i)))))
+
+(define handle-left
+  (lambda (lhs env class instance k)
+    (cond
+      ((eq? 'super lhs) (k (get-parent class) instance))
+      ((eq? 'this lhs) (error "handle this")) ; handle this for next time
+      (else (handle-left-helper (lookup lhs env class instance) k)))))
+
+(define handle-left-helper
+  (lambda (lookup_val k)
+    (cond    
+      ((eq? (instance? lookup_val) (k (get-class lookup_val) lookup_val)))
+      (else (k lookup_val '())))))
+
+(define instance?
+  (lambda (to_check)
+    (cond
+      ((null? (cddr to_check)) #t)
+      (else #f))))
 
 (define pret-while
   (lambda (stmnt enviro class instance return)
@@ -96,6 +121,11 @@
       (else (value (cadr expr) env class instance (lambda (val enviro) (value (caddr expr) enviro class instance 
                                              (lambda (val2 enviro2) (k ((getOp (car expr)) val val2) enviro2)))))))))
 
+(define pret-func-def
+  (lambda (stmnt env name)
+    (bind (cadr stmnt)
+          (cons (caddr stmnt) (cons (cadddr stmnt) (cons (lambda (v) (get-func-env v)) ;<--handle recursion
+                                                         (cons (lambda (enviro) (get-func-class name enviro))'())))) env)))
 (define pret-funcall
   (lambda (stmnt env class instance k)
     (k (call/cc (lambda (ret)

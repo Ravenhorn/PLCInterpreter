@@ -1,5 +1,9 @@
 Steps for part 4: (see below for a different list)
 
+class: ((var env) (instance var names and initial exprs) (method env) parent class)
+
+object: ((instance var values [NOT AN ENVIRONMENT]) true type class name)
+
 1. Add class and object functions 
 	Class: 
 		a) class var environment
@@ -20,20 +24,20 @@ Steps for part 4: (see below for a different list)
 4. change part 2 of interpreter - DONE, not counting the fact a lof the the pret functions change for the other parts anyway
 	-each interpret function now takes a class and instance
 
-5. change how we lookup a name
+5. change how we lookup a name - in progress
 	a) take a name, class, instance
 		-lookup name in class and instance and return a val
 	b) take a env, class, instance
 		-lookup in the env first, then the class and instance
 
-6. handle dot expressions (e.g. a.x parsed as (dot a x))
+6. handle dot expressions (e.g. a.x parsed as (dot a x)) - worked on, not tested.
 	-evaluate the left side to get class and instance
 
 7. update interpret assignment to store the value in the class
 	variable, instance value, or current environment
 
 8. functions
-	a) functions definitions
+	a) functions definitions - worked on, also not tested
 		-add a function that gets the owning class of the method to the closure
 
 	b) function calls
