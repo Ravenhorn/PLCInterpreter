@@ -44,7 +44,20 @@
 
 (define lookup-ci
   (lambda (var class instance)
-    '()))
+    (cond
+      ((null? class) (lookup-inst var instance (lambda (v) v)))
+      ((null? instance) (lookup-class var class))
+      (else (lookup-class var class
+                         (lambda (v)
+                           (cond
+                             ((null? v) (lookup-instance var instance))
+                             (else v))))))))
+
+(define lookup-instance
+  (lambda (var instance k)
+    (cond
+      ((null? instance) (k '()))
+      (else (k (lookvar var (caar instance) (cadar instance)))))))
 
 (define bind
   (lambda (var val env)
