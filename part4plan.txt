@@ -1,5 +1,9 @@
 Steps for part 4: (see below for a different list)
 
+class: ((var env) (instance var names and initial exprs) (method env) parent class)
+
+object: ((instance var values [NOT AN ENVIRONMENT]) true type class name)
+
 1. Add class and object functions 
 	Class: 
 		a) class var environment
