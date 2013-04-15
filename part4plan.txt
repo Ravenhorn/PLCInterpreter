@@ -17,7 +17,7 @@ Steps for part 4: (see below for a different list)
 
 *if a method is not static append this to the formal parameters
 
-4. change part 2 of interpreter
+4. change part 2 of interpreter - DONE, not counting the fact a lof the the pret functions change for the other parts anyway
 	-each interpret function now takes a class and instance
 
 5. change how we lookup a name
