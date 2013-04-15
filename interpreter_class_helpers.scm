@@ -5,6 +5,10 @@
 (define get-class-body
   (lambda (class)
     (cadddr class)))
+
+(define get-class-bame
+  (lambda (class)
+    (car class)))
      
 (define get-parent-name
   (lambda (class)

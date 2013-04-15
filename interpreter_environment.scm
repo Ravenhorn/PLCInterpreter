@@ -111,6 +111,10 @@
       ((null? (cdr env)) env)
       (else (get-func-env (cdr env))))))
 
+(define get-func-class
+  (lambda (name env)
+    (lookup name env '() '())))
+
 (define new-class-env
   (lambda (parent)
     (cons (new-env) (cons (new-env) (cons (new-env) (cons parent '()))))))
