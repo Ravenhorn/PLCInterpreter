@@ -6,7 +6,7 @@
   (lambda (class)
     (cadddr class)))
 
-(define get-class-bame
+(define get-class-name
   (lambda (class)
     (car class)))
      

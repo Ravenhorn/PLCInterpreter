@@ -26,12 +26,12 @@
   (lambda (ptree env name)
     (cond
       ((null? ptree) env)
-      (else (interpret-class-body (cdr ptree) (interpret-class-stmnt (car ptree) env name))))))
+      (else (interpret-class-body (cdr ptree) (interpret-class-stmnt (car ptree) env name) name)))))
 
 (define interpret-class-stmnt
   (lambda (stmnt env name)
     (cond
       ((eq? 'static-var (car stmnt)) (cons (pret-declare stmnt (car env) '() '()) (cdr env))) ;TODO are we sure about passing nulls to pret-declare?
-      ((eq? 'static-function (car stmnt)) (insert-class-method (pret-func-def stmnt (caddr env)) env name));ditto as above
+      ((eq? 'static-function (car stmnt)) (insert-class-method (pret-func-def stmnt (caddr env) name) env));ditto as above
       ;(else (error (car stmnt))))))
       (else (error "invalid global parse tree")))))
