@@ -96,6 +96,12 @@
       (else (value (cadr expr) env class instance (lambda (val enviro) (value (caddr expr) enviro class instance 
                                              (lambda (val2 enviro2) (k ((getOp (car expr)) val val2) enviro2)))))))))
 
+(define pret-func-def
+  (lambda (stmnt env)
+    (bind (cadr stmnt)
+          (cons (caddr stmnt) (cons (cadddr stmnt) (cons (lambda (v) (get-func-env v)) ;<--handle recursion
+                                                         '()))) env)))
+
 (define pret-funcall
   (lambda (stmnt env class instance k)
     (k (call/cc (lambda (ret)

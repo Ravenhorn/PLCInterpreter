@@ -6,7 +6,7 @@
 (load "interpreter_environment.scm")
 (load "interpreter_statements.scm")
 
-(define interpret-class
+(define interpret
   (lambda (filename mainclass)
     (call/cc (lambda (ret)
                (interpret-class-sl (parser filename) (new-env) (lambda (v) (interpret-sl (cadr (lookup 'main '() (lookup mainclass v '() '()) '())) v (lookup mainclass v '() '()) ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop")))))))))
@@ -32,6 +32,6 @@
   (lambda (stmnt env)
     (cond
       ((eq? 'static-var (car stmnt)) (cons (pret-declare stmnt (car env) '() '()) (cdr env))) ;TODO are we sure about passing nulls to pret-declare?
-      ((eq? 'static-function (car stmnt)) (insert-class-method (pret-func-def stmnt (caddr env) '() '()) env));ditto as above
+      ((eq? 'static-function (car stmnt)) (insert-class-method (pret-func-def stmnt (caddr env)) env));ditto as above
       ;(else (error (car stmnt))))))
       (else (error "invalid global parse tree")))))
