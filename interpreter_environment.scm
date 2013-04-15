@@ -54,13 +54,13 @@
   (lambda (var class k)
     (cond
       ((null? class) (k '()))
-      (else (k (lookvar var (reverse (car class)) (reverse (cadr class))))))))
+      (else (k (lookvar var (reverse (car class)) (reverse (cadr class)))))))) ;<--- This makes NO sense. You are passing entire environments in as the vallists and varlits to lookvar, instead of, you know var list and val lists
 
 (define lookup-instance
   (lambda (var class instance k)
     (cond
       ((null? instance) (k '()))
-      (else (k (lookvar var (reverse (car class)) (reverse (car instance))))))))
+      (else (k (lookvar var (reverse (car class)) (reverse (car instance)))))))) ;<-- same problem as lookup-class
 
 (define bind
   (lambda (var val env)
