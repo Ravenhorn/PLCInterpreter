@@ -40,7 +40,7 @@ object: ((instance var values [NOT AN ENVIRONMENT]) true type class name)
 	a) functions definitions - worked on, also not tested
 		-add a function that gets the owning class of the method to the closure
 
-	b) function calls - in progress, needs new binds
+	b) function calls - maybe done, depends on 7
 		i) called with a dot
 			-eval left-hand of dot and lookup in class
 		ii) without a dot
