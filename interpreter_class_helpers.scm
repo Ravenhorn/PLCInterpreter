@@ -15,3 +15,11 @@
     (cond
       ((null? (caddr class)) '())
       (else (cadr (caddr class))))))
+
+(define get-class-var-method-names
+  (lambda (class)
+    (cons (caaar class) (caar (caddr class)))))
+
+(define get-class-var-method-vals
+  (lambda (class)
+    (cons (cadaar class) (cadar (caddr class)))))

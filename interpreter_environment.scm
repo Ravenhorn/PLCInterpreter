@@ -1,3 +1,5 @@
+(load "interpreter_class_helpers.scm")
+
 (define new-env
   (lambda ()
     '((() ())) ))
@@ -54,13 +56,15 @@
   (lambda (var class k)
     (cond
       ((null? class) (k '()))
-      (else (k (lookvar var (reverse (car class)) (reverse (cadr class)))))))) ;<--- This makes NO sense. You are passing entire environments in as the vallists and varlits to lookvar, instead of, you know var list and val lists
+      (else (k (lookvar var (reverse (get-class-var-method-names class)) (reverse (get-class-var-method-vals class)))))))) ;stuart's fix
+      ;(else (k (lookvar var (reverse (car class)) (reverse (cadr class)))))))) 
 
 (define lookup-instance
   (lambda (var class instance k)
     (cond
       ((null? instance) (k '()))
-      (else (k (lookvar var (reverse (car class)) (reverse (car instance)))))))) ;<-- same problem as lookup-class
+      (else (k (lookvar var (reverse (get-class-var-method-names class)) (reverse (car instance)))))))))
+      ;(else (k (lookvar var (reverse (car class)) (reverse (car instance)))))))) ;<-- same problem as lookup-class
 
 (define bind
   (lambda (var val env)
