@@ -30,9 +30,13 @@
 (define handle-left
   (lambda (lhs env class instance k)
     (cond
-      ((eq? 'super lhs) (k (get-parent class) instance))
+      ((eq? 'super lhs) (k (get-parent class env) instance))
       ((eq? 'this lhs) (error "handle this")) ; handle this for next time
       (else (handle-left-helper (lookup lhs env class instance) k)))))
+
+(define get-parent
+  (lambda (name env)
+    (lookup name env '() '())))
 
 (define handle-left-helper
   (lambda (lookup_val k)
@@ -133,8 +137,8 @@
                     ((list? (cadr stmnt)) (pret-dot (cadr stmnt) env class instance (lambda (c i) (funcall-helper stmnt (get-method (caddr (cadr stmnt)) c) env class instance c i ret))))
                     (else
                      (cond
-                       ((null? instance) (funcall-helper stmnt (get-method (caddr (cadr stmnt)) class) env class isntance (cadddr (get-method (caddr (cadr stmnt)))) '() ret))
-                        (else (funcall-helper stmnt (get-method (caddr (cadr stmnt)) (get-instance-class instance)) env class instance (get-instance-class instance) instance ret))))))))))
+                       ((null? instance) (funcall-helper stmnt (get-method (cadr stmnt) class) env class instance (cadddr (get-method (cadr stmnt) class)) '() ret))
+                        (else (funcall-helper stmnt (get-method (cadr stmnt) (get-instance-class instance)) env class instance (get-instance-class instance) instance ret))))))))))
                ;(interpret-sl (cadr (lookup (cadr stmnt) env class instance)) (setup-func-env stmnt env class instance) class instance ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop"))))))))
 
 (define get-method
@@ -157,7 +161,7 @@
       ((null? params) func_env)
       ;((list? (car params)) (handle-dot))
       ((eq? '& (car params)) (assign-args (cddr params) (cdr args) (bind-box (cadr params) (get-box-for-ref (car args) old_env) func_env) old_env old_class old_instance))
-      (else (value (car args) old_env old_class old_instance (lambda (val env) (assign-args (cdr params) (cdr args) (bind (car params) val func_env) env old_class old_instance)))))))
+      (else (value (car args) old_env old_class old_instance (lambda (val env) (assign-args (cdr params) (cdr args) (bind (car params) val func_env) env old_class old_instance new_class new_instance)))))))
 
 (define getBool
   (lambda (op)
