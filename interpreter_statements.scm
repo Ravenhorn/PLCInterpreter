@@ -129,19 +129,35 @@
 (define pret-funcall
   (lambda (stmnt env class instance k)
     (k (call/cc (lambda (ret)
-               (interpret-sl (cadr (lookup (cadr stmnt) env class instance)) (setup-func-env stmnt env class instance) class instance ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop"))))))))
+                  (cond
+                    ((list? (cadr stmnt)) (pret-dot (cadr stmnt) env class instance (lambda (c i) (funcall-helper stmnt (get-method (caddr (cadr stmnt)) c) env class instance c i ret))))
+                    (else
+                     (cond
+                       ((null? instance) (funcall-helper stmnt (get-method (caddr (cadr stmnt)) class) env class isntance (cadddr (get-method (caddr (cadr stmnt)))) '() ret))
+                        (else (funcall-helper stmnt (get-method (caddr (cadr stmnt)) (get-instance-class instance)) env class instance (get-instance-class instance) instance ret))))))))))
+               ;(interpret-sl (cadr (lookup (cadr stmnt) env class instance)) (setup-func-env stmnt env class instance) class instance ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop"))))))))
 
+(define get-method
+  (lambda (name class)
+    (lookup name '() class '())))
+
+(define funcall-helper
+  (lambda (stmnt closure env old_class old_instance new_class new_instance ret)
+    (interpret-sl (cadr closure) (setup-func-env stmnt closure env old_class old_instance new_class new_instance) new_class new_instance ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop")))))
+    
 (define setup-func-env
-  (lambda (stmnt env class instance)
-    (assign-args (car (lookup (cadr stmnt) env class isntance)) (cddr stmnt) ((caddr (lookup (cadr stmnt) env class instance)) env);this last arg returns a get-func-env procedure
-                                                      env class instance))) 
+  (lambda (stmnt closure env old_class old_instance new_class new_instance)
+    (assign-args (car closure) (cddr stmnt) ((caddr closure) env);this last arg returns a get-func-env procedure
+                                                      env old_class old_instance new_class new_instance))) 
 
+;TODO finish class/instance binding once bind works for class instances
 (define assign-args
-  (lambda (params args func_env old_env class instance)
+  (lambda (params args func_env old_env old_class old_instance new_class new_instance)
     (cond
       ((null? params) func_env)
-      ((eq? '& (car params)) (assign-args (cddr params) (cdr args) (bind-box (cadr params) (get-box-for-ref (car args) old_env) func_env) old_env class instance))
-      (else (value (car args) old_env class instance (lambda (val env) (assign-args (cdr params) (cdr args) (bind (car params) val func_env) env class instance)))))))
+      ;((list? (car params)) (handle-dot))
+      ((eq? '& (car params)) (assign-args (cddr params) (cdr args) (bind-box (cadr params) (get-box-for-ref (car args) old_env) func_env) old_env old_class old_instance))
+      (else (value (car args) old_env old_class old_instance (lambda (val env) (assign-args (cdr params) (cdr args) (bind (car params) val func_env) env old_class old_instance)))))))
 
 (define getBool
   (lambda (op)

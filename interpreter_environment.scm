@@ -63,7 +63,7 @@
   (lambda (var class instance k)
     (cond
       ((null? instance) (k '()))
-      (else (k (lookvar var (reverse (get-class-var-method-names class)) (reverse (car instance)))))))))
+      (else (k (lookvar var (reverse (get-class-var-method-names class)) (reverse (car instance))))))))
       ;(else (k (lookvar var (reverse (car class)) (reverse (car instance)))))))) ;<-- same problem as lookup-class
 
 (define bind

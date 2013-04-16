@@ -40,12 +40,18 @@ object: ((instance var values [NOT AN ENVIRONMENT]) true type class name)
 	a) functions definitions - worked on, also not tested
 		-add a function that gets the owning class of the method to the closure
 
-	b) function calls
+	b) function calls - in progress, needs new binds
 		i) called with a dot
 			-eval left-hand of dot and lookup in class
 		ii) without a dot
 			-if there is an instance lookup in the instance's class's method environment
 			-else lookup in function's class's method environment
+
+9. allow method overloading
+
+10. need binds/bind-deeps for classes and isntances
+
+11. test the damn thing
 
 
 From the prompt:
