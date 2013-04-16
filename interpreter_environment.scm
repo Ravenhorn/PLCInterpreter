@@ -20,7 +20,7 @@
                                                  ((not (null? val)) val)
                                                  (else (lookup-ci var class instance (lambda (val)
                                                                                        (cond
-                                                                                         ((null? val) (error "Variable not declared"))
+                                                                                         ((null? val) (error var))
                                                                                          (else val)))))))))
       (else (lookup-ci var class instance (lambda (val)
                                             (cond

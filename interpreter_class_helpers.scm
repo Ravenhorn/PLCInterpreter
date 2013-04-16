@@ -8,7 +8,7 @@
 
 (define get-class-name
   (lambda (class)
-    (car class)))
+    (cadr class)))
      
 (define get-parent-name
   (lambda (class)
