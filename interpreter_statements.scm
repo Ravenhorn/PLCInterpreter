@@ -151,8 +151,11 @@
     
 (define setup-func-env
   (lambda (stmnt closure env old_class old_instance)
-    (assign-args (car closure) (cddr stmnt) ((caddr closure) env);this last arg returns a get-func-env procedure
-                                                      env old_class old_instance))) 
+    (cond
+      ((eq? (length (car closure)) (length (cddr stmnt)))
+       (assign-args (car closure) (cddr stmnt) ((caddr closure) env);this last arg returns a get-func-env procedure
+                                                      env old_class old_instance))
+      (else (error "invalid arguments for function")))))
 
 ;TODO finish class/instance binding once bind works for class instances
 (define assign-args
