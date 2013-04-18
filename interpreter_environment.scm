@@ -58,7 +58,7 @@
       ((null? class) (k '()))
       (else (k (lookvar var 
                         (reverse (get-class-var-method-names class))
-                        (reverse (get-class-var-method-vals class)) 
+                        (reverse (get-class-var-method-vals class))
                         (lambda (v)
                           (cond
                             ((null? v) (lookup-class var (cadddr class) (lambda (v) v)))

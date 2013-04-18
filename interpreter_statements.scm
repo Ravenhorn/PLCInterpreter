@@ -82,7 +82,7 @@
       ((null? stmnt) (error "null arg passed to assign"))
       ((null? (cddr stmnt)) (error "no value to assign"))
       ((list? (cadr stmnt)) (pret-dot (cadr stmnt) env class instance (lambda (c i)
-                                                                     (bind-deep (caddadr stmnt) (value (caddr stmnt) env class instance (lambda (v) v)) (car c))))) ;add a cond for objects
+                                                                     (bind-deep (caddr (cadr stmnt)) (value (caddr stmnt) env class instance (lambda (v) v)) (car c))))) ;add a cond for objects
       ((declared? (cadr stmnt) env class) (value (caddr stmnt) env class instance (lambda (val enviro) (k val (bind-deep (cadr stmnt) val (cons (caar class) enviro)) ))))
       (else (begin (display "error on: ") (display stmnt) (newline) (error "variable not declared"))))))
 
@@ -123,7 +123,7 @@
       ((eq? '= (car expr)) (pret-assign expr env class instance (lambda (vals enviro) (k vals enviro))))
       ((eq? 'funcall (car expr)) (k (pret-funcall expr env class instance (lambda (retval) retval)) env))
       ((eq? '! (car expr)) (value (cdr expr) env class instance (lambda (vals enviro) (k (not vals) enviro))))
-      ((eq? 'dot (car expr)) (pret-dot expr class instance (lambda (c i) (k (lookup (caddr expr) '() c i) env))))
+      ((eq? 'dot (car expr)) (pret-dot expr env class instance (lambda (c i) (k  (lookup (caddr expr) '() c i) env))))
       ((and (eq? '- (car expr)) (null? (cddr expr))) (value (cdr expr) env class instance (lambda (vals enviro) (k (* -1 vals) enviro))))
       (else (value (cadr expr) env class instance (lambda (val enviro) (value (caddr expr) enviro class instance 
                                              (lambda (val2 enviro2) (k ((getOp (car expr)) val val2) enviro2)))))))))
