@@ -84,7 +84,7 @@
       ((list? (cadr stmnt)) (pret-dot (cadr stmnt) env class instance (lambda (c i)
                                                                      (bind-deep (caddadr stmnt) (value (caddr stmnt) env class instance (lambda (v) v)) (car c))))) ;add a cond for objects
       ((declared? (cadr stmnt) env class) (value (caddr stmnt) env class instance (lambda (val enviro) (k val (bind-deep (cadr stmnt) val enviro)))))
-      (else (error "variable not declared")))))
+      (else (begin (display "error on: ") (display stmnt) (newline) (error "variable not declared"))))))
 
 (define pret-if
   (lambda (stmnt env class instance ret brk cont)
@@ -159,7 +159,7 @@
       ((eq? (length (car closure)) (length (cddr stmnt)))
        (assign-args (car closure) (cddr stmnt) ((caddr closure) env);this last arg returns a get-func-env procedure
                                                       env old_class old_instance))
-      (else (error "invalid arguments for function")))))
+      (else (begin (display "error on: ") (display stmnt) (newline) (error "invalid arguments for function"))))))
 
 ;TODO finish class/instance binding once bind works for class instances
 (define assign-args
@@ -182,7 +182,7 @@
       ((eq? '|| op) (lambda (b1 b2) (or b1 b2)));for some reason just returning or gives a syntax error
       ((eq? '&& op) (lambda (b1 b2) (and b1 b2)));for some reason just returning and gives a syntax error
       ((eq? '! op) not)
-      (else (error "invalid operator")))))
+      (else (begin (display "error on: ") (display op) (newline) (error "invalid operator"))))))
 
 (define getOp
   (lambda (op)
