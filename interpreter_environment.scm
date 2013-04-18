@@ -31,18 +31,18 @@
   (lambda (var env k)
     (cond
       ((null? env) '())
-      ((not (null? (k (lookvar var (caar env) (cadar env))))) (lookvar var (caar env) (cadar env)))
+      ((not (null? (k (lookvar var (caar env) (cadar env) (lambda (v) v))))) (lookvar var (caar env) (cadar env) (lambda (v) v))) ;turn this into a continuation
       (else (k (lookup var (cdr env)))))))
 
 (define lookvar
-  (lambda (var varlist vallist)
+  (lambda (var varlist vallist k)
     (cond
-      ((null? varlist) '())
+      ((null? varlist) (k '()))
       ((eq? var (car varlist))
        (cond
          ((null? (unbox (car vallist))) (begin (display "error on: ") (display var) (newline) (error "variable not initialized")))
-         (else (unbox (car vallist)))))
-      (else (lookvar var (cdr varlist) (cdr vallist))))))
+         (else (k (unbox (car vallist))))))
+      (else (k (lookvar var (cdr varlist) (cdr vallist) (lambda (v) v)))))))
 
 (define lookup-ci
   (lambda (var class instance k)
@@ -56,14 +56,20 @@
   (lambda (var class k)
     (cond
       ((null? class) (k '()))
-      (else (k (lookvar var (reverse (get-class-var-method-names class)) (reverse (get-class-var-method-vals class)))))))) ;stuart's fix
+      (else (k (lookvar var 
+                        (reverse (get-class-var-method-names class))
+                        (reverse (get-class-var-method-vals class)) 
+                        (lambda (v)
+                          (cond
+                            ((null? v) (lookup-class var (cadddr class) (lambda (v) v)))
+                            (else v)))))))))
       ;(else (k (lookvar var (reverse (car class)) (reverse (cadr class)))))))) 
 
 (define lookup-instance
   (lambda (var class instance k)
     (cond
       ((null? instance) (k '()))
-      (else (k (lookvar var (reverse (get-class-var-method-names class)) (reverse (car instance))))))))
+      (else (k (lookvar var (reverse (get-class-var-method-names class)) (reverse (car instance)) (lambda (v) v))))))) ;will need to be changed when objects implemented
       ;(else (k (lookvar var (reverse (car class)) (reverse (car instance)))))))) ;<-- same problem as lookup-class
 
 (define bind
