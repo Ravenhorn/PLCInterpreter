@@ -80,7 +80,7 @@
   (lambda (var val env)
     (cond
       ((null? env) (error "null environment"));shouldn't this error out?
-      ((declared? var (cons (car env) '())) (handle-box var val (car env) (lambda (val enviro) env)))
+      ((declared? var (cons (car env) '()) '()) (handle-box var val (car env) (lambda (val enviro) env)))
       (else (cons (car env) (bind-deep var val (cdr env)))))))
 
 (define handle-box
@@ -99,21 +99,41 @@
     (cond
       ((null? env) (begin (display "error on: ") (display var) (newline) (error "variable not declared")))
       ((or (pair? var) (boolean? var) (number? var)) (begin (display "error on: ") (display var) (newline) (error "only variables can be passed by reference")))
-      ((declared? var (cons (car env) '())) (get-box var (caar env) (cadar env)))
+      ((declared? var (cons (car env) '()) '()) (get-box var (caar env) (cadar env)))
       (else (get-box-for-ref var (cdr env))))))
 
 (define bind-box
   (lambda (var box_val env)
     (cons (cons (cons var (caar env)) (cons (cons box_val (cadar env)) '())) (cdr env))))
 
-(define declared?
-  (lambda (var env)
+(define declared
+  (lambda (var env class)
+    (declared-env? var env (lambda (v)
+                             (if v
+                                 #t
+                                 (declared-class? var class (lambda (v) v)))))))
+
+(define declared-env?
+  (lambda (var env k)
     (cond
-      ((null? env) #f)
+      ((null? env) (k #f))
       ((null? var) (error "null var"))
-      ((eq? (car env) var) #t)
-      ((and (list? (car env)) (declared? var (car env))) #t)
-      (else (declared? var (cdr env))))))
+      ((eq? (car env) var) (k #t))
+      ((and (list? (car env)) (declared-env? var (car env))) (k #t))
+      (else (k (declared-env? var (cdr env)))))))
+
+(define declared-class?
+  (lambda (var class k)
+    (cond
+      ((null? class) (k #f))
+      ((null? var) (error "null var"))
+      (else (k (declared-env? var (car class) (lambda (v) v)))))))
+
+(define declared-inst?
+  (lambda (var class inst k)
+    (cond
+      ((null? class) (k #f))
+      ((null? var)))))
 
 (define get-func-env
   (lambda (env)
@@ -128,11 +148,3 @@
 (define new-class-env
   (lambda (parent)
     (cons (new-env) (cons (new-env) (cons (new-env) (cons parent '()))))))
-
-(define lookup-method
-  (lambda (name class numb_args)
-    (letrec ((loop (lambda (var_l val_l)
-                     (lookvar name var_l val_l (lambda (v) (cond
-                                                             ((eq? (length (car v)) numb_args) v)
-                                                              (else (loop (name (cdr var_l) (cdr val_l))))))))))
-      (loop (caar (caddr class)) (cadar (caddr class))))))
