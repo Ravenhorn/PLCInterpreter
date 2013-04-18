@@ -148,3 +148,11 @@
 (define new-class-env
   (lambda (parent)
     (cons (new-env) (cons (new-env) (cons (new-env) (cons parent '()))))))
+
+(define lookup-method
+  (lambda (name class numb_args)
+    (letrec ((loop (lambda (var_l val_l)
+                     (lookvar name var_l val_l (lambda (v) (cond
+                                                             ((eq? (length (car v)) numb_args) v)
+                                                              (else (loop (name (cdr var_l) (cdr val_l))))))))))
+      (loop (caar (caddr class)) (cadar (caddr class))))))
