@@ -15,7 +15,7 @@
 (define lookup
   (lambda (var env class instance)
     (cond
-      ((not (null? env)) (lookup-env var env (lambda (val)
+      ((not (null? env))  (lookup-env var env (lambda (val)
                                                (cond
                                                  ((not (null? val)) val)
                                                  (else (lookup-ci var class instance (lambda (val)
