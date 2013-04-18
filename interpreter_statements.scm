@@ -41,7 +41,7 @@
 (define handle-left-helper
   (lambda (lookup_val k)
     (cond    
-      ((eq? (instance? lookup_val) (k (get-class lookup_val) lookup_val)))
+      ((instance? lookup_val) (k (get-class lookup_val) lookup_val))
       (else (k lookup_val '())))))
 
 (define instance?
@@ -134,16 +134,17 @@
   (lambda (stmnt env class instance k)
     (k (call/cc (lambda (ret)
                   (cond
-                    ((list? (cadr stmnt)) (pret-dot (cadr stmnt) env class instance (lambda (c i) (funcall-helper stmnt (get-method (caddr (cadr stmnt)) c) env class instance c i ret))))
+                    ((list? (cadr stmnt)) (pret-dot (cadr stmnt) env class instance (lambda (c i) (funcall-helper stmnt (get-method (caddr (cadr stmnt)) c (cddr stmnt)) env class instance c i ret))))
                     (else
                      (cond
-                       ((null? instance) (funcall-helper stmnt (get-method (cadr stmnt) class) env class instance ((cadddr (get-method (cadr stmnt) class)) env) '() ret))
-                        (else (funcall-helper stmnt (get-method (cadr stmnt) (get-instance-class instance)) env class instance (get-instance-class instance) instance ret))))))))))
+                       ((null? instance) (funcall-helper stmnt (get-method (cadr stmnt) class (cddr stmnt)) env class instance ((cadddr (get-method (cadr stmnt) class (cddr stmnt))) env) '() ret))
+                        (else (funcall-helper stmnt (get-method (cadr stmnt) (get-instance-class instance) (cddr stmnt)) env class instance (get-instance-class instance) instance ret))))))))))
                ;(interpret-sl (cadr (lookup (cadr stmnt) env class instance)) (setup-func-env stmnt env class instance) class instance ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop"))))))))
 
 (define get-method
-  (lambda (name class)
-    (lookup name '() class '())))
+  (lambda (name class args)
+    (lookup-method name class (length args))))
+    ;(lookup name '() class '())))
 
 (define funcall-helper
   (lambda (stmnt closure env old_class old_instance new_class new_instance ret)
