@@ -81,6 +81,8 @@
     (cond
       ((null? stmnt) (error "null arg passed to assign"))
       ((null? (cddr stmnt)) (error "no value to assign"))
+      ((eq? 'dot (caadr stmnt)) (pret-dot (cadr stmnt) env class instance (lambda (c i)
+                                                                     (bind-deep (caddadr stmnt) (value (caddr stmnt) env class instance (lambda (v) v)) (car c))))) ;add a cond for objects
       ((declared? (cadr stmnt) env) (value (caddr stmnt) env class instance (lambda (val enviro) (k val (bind-deep (cadr stmnt) val enviro)))))
       (else (error "variable not declared")))))
 
