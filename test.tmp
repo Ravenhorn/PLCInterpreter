@@ -7,10 +7,14 @@ class Rectangle {
     return a;
   }
 
-  static setSize(x, z, u) {
+  static setSize(x, z) {
     width = x;
     height = u;
   }
+
+  static setSize(x,y,u) {
+	height = 1000;
+	}
 }
 
 class Square extends Rectangle {
@@ -21,7 +25,7 @@ class Square extends Rectangle {
 	}
 	
 	static main() {
-		Rectangle.setSize(100,100,100);
-		return Rectangle.height;
+		super.setSize(100,100,100);
+		return super.height;
 	}
 }

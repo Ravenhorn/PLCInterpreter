@@ -30,13 +30,13 @@
 (define handle-left
   (lambda (lhs env class instance k)
     (cond
-      ((eq? 'super lhs) (k (get-parent class env) instance))
+      ((eq? 'super lhs) (k (get-parent class) instance))
       ((eq? 'this lhs) (error "handle this")) ; handle this for next time
       (else (handle-left-helper (lookup lhs env class instance) k)))))
 
 (define get-parent
-  (lambda (name env)
-    (lookup name env '() '())))
+  (lambda (class)
+    (cadddr class)))
 
 (define handle-left-helper
   (lambda (lookup_val k)
