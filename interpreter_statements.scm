@@ -10,7 +10,7 @@
   (lambda (stmnt env class instance ret brk cont)
     (cond
       ;((pair? (car stmnt)) (interpret-stmnt (car stmnt) env))
-      ((eq? '= (car stmnt)) (pret-assign stmnt env (lambda (val env) env) class instance))
+      ((eq? '= (car stmnt)) (pret-assign stmnt env  class instance (lambda (val env) env)))
       ((eq? 'var (car stmnt)) (pret-declare stmnt env class instance))
       ((eq? 'if (car stmnt)) (pret-if stmnt env class instance ret brk cont))
       ((eq? 'return (car stmnt)) (ret (pret-return stmnt env class instance)))
@@ -83,7 +83,7 @@
       ((null? (cddr stmnt)) (error "no value to assign"))
       ((list? (cadr stmnt)) (pret-dot (cadr stmnt) env class instance (lambda (c i)
                                                                      (bind-deep (caddadr stmnt) (value (caddr stmnt) env class instance (lambda (v) v)) (car c))))) ;add a cond for objects
-      ((declared? (cadr stmnt) env class) (value (caddr stmnt) env class instance (lambda (val enviro) (k val (bind-deep (cadr stmnt) val enviro)))))
+      ((declared? (cadr stmnt) env class) (value (caddr stmnt) env class instance (lambda (val enviro) (k val (bind-deep (cadr stmnt) val (cons (caar class) enviro)) ))))
       (else (begin (display "error on: ") (display stmnt) (newline) (error "variable not declared"))))))
 
 (define pret-if

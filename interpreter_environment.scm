@@ -79,7 +79,7 @@
 (define bind-deep
   (lambda (var val env)
     (cond
-      ((null? env) (error "null environment"));shouldn't this error out?
+      ((null? env) (begin (display "error on: ") (display var) (display val) (newline) (error "null environment")));shouldn't this error out?
       ((declared? var (cons (car env) '()) '()) (handle-box var val (car env) (lambda (val enviro) env)))
       (else (cons (car env) (bind-deep var val (cdr env)))))))
 
@@ -106,7 +106,7 @@
   (lambda (var box_val env)
     (cons (cons (cons var (caar env)) (cons (cons box_val (cadar env)) '())) (cdr env))))
 
-(define declared
+(define declared?
   (lambda (var env class)
     (declared-env? var env (lambda (v)
                              (if v
@@ -119,8 +119,8 @@
       ((null? env) (k #f))
       ((null? var) (error "null var"))
       ((eq? (car env) var) (k #t))
-      ((and (list? (car env)) (declared-env? var (car env))) (k #t))
-      (else (k (declared-env? var (cdr env)))))))
+      ((and (list? (car env)) (declared-env? var (car env) (lambda (v) v))) (k #t))
+      (else (declared-env? var (cdr env) (lambda (v) (k v)))))))
 
 (define declared-class?
   (lambda (var class k)
