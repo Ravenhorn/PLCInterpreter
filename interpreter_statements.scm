@@ -121,6 +121,7 @@
       ((eq? '= (car expr)) (pret-assign expr env class instance (lambda (vals enviro) (k vals enviro))))
       ((eq? 'funcall (car expr)) (k (pret-funcall expr env class instance (lambda (retval) retval)) env))
       ((eq? '! (car expr)) (value (cdr expr) env class instance (lambda (vals enviro) (k (not vals) enviro))))
+      ((eq? 'dot (car expr)) (pret-dot expr class instance (lambda (c i) (k (lookup (caddr expr) '() c i) env))))
       ((and (eq? '- (car expr)) (null? (cddr expr))) (value (cdr expr) env class instance (lambda (vals enviro) (k (* -1 vals) enviro))))
       (else (value (cadr expr) env class instance (lambda (val enviro) (value (caddr expr) enviro class instance 
                                              (lambda (val2 enviro2) (k ((getOp (car expr)) val val2) enviro2)))))))))
