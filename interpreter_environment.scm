@@ -20,11 +20,11 @@
                                                  ((not (null? val)) val)
                                                  (else (lookup-ci var class instance (lambda (val)
                                                                                        (cond
-                                                                                         ((null? val) (error var))
+                                                                                         ((null? val) (begin (display "error on: ") (display var) (newline) (error "variable not declared")))
                                                                                          (else val)))))))))
       (else (lookup-ci var class instance (lambda (val)
                                             (cond
-                                              ((null? val) (error "Variable not declared"))
+                                              ((null? val) (begin (display "error on: ") (display var) (newline) (error "variable not declared")))
                                               (else val))))))))
 
 (define lookup-env
@@ -40,7 +40,7 @@
       ((null? varlist) '())
       ((eq? var (car varlist))
        (cond
-         ((null? (unbox (car vallist))) (error "variable/method declared but not initialized"))
+         ((null? (unbox (car vallist))) (begin (display "error on: ") (display var) (newline) (error "variable not initialized")))
          (else (unbox (car vallist)))))
       (else (lookvar var (cdr varlist) (cdr vallist))))))
 
@@ -84,15 +84,15 @@
 (define get-box
   (lambda (var vars vals)
     (cond
-      ((null? vars) (error "couldn't find box"))
+      ((null? vars) (begin (display "error on: ") (display var) (newline) (error "couldn't find box")))
       ((eq? var (car vars)) (car vals))
       (else (get-box var (cdr vars) (cdr vals))))))
 
 (define get-box-for-ref
   (lambda (var env)
     (cond
-      ((null? env) (error "var not declared"))
-      ((or (pair? var) (boolean? var) (number? var)) (error "only variables can be passed by reference"))
+      ((null? env) (begin (display "error on: ") (display var) (newline) (error "variable not declared")))
+      ((or (pair? var) (boolean? var) (number? var)) (begin (display "error on: ") (display var) (newline) (error "only variables can be passed by reference")))
       ((declared? var (cons (car env) '())) (get-box var (caar env) (cadar env)))
       (else (get-box-for-ref var (cdr env))))))
 
