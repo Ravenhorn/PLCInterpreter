@@ -10,7 +10,7 @@
   (lambda (stmnt env class instance ret brk cont)
     (cond
       ;((pair? (car stmnt)) (interpret-stmnt (car stmnt) env))
-      ((eq? '= (car stmnt)) (pret-assign stmnt env (lambda (val env) env class instance)))
+      ((eq? '= (car stmnt)) (pret-assign stmnt env (lambda (val env) env) class instance))
       ((eq? 'var (car stmnt)) (pret-declare stmnt env class instance))
       ((eq? 'if (car stmnt)) (pret-if stmnt env class instance ret brk cont))
       ((eq? 'return (car stmnt)) (ret (pret-return stmnt env class instance)))
