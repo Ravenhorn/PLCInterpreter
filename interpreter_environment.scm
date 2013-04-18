@@ -31,8 +31,8 @@
   (lambda (var env k)
     (cond
       ((null? env) '())
-      ((not (null? (k (lookvar var (caar env) (cadar env) (lambda (v) v))))) (lookvar var (caar env) (cadar env) (lambda (v) v))) ;turn this into a continuation
-      (else (k (lookup var (cdr env)))))))
+      ((not (null? (lookvar var (caar env) (cadar env) (lambda (v) v)))) (lookvar var (caar env) (cadar env) (lambda (v) (k v)))) ;turn this into a continuation
+      (else (lookup-env var (cdr env) (lambda (v) (k v)))))))
 
 (define lookvar
   (lambda (var varlist vallist k)
