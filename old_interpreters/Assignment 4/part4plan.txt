@@ -1,0 +1,75 @@
+Steps for part 4: (see below for a different list)
+
+class: ((var env) (instance var names and initial exprs) (method env) parent class)
+
+object: ((instance var values [NOT AN ENVIRONMENT]) true type class name)
+
+1. Add class and object functions 
+	Class: 
+		a) class var environment
+		b) instance vars and initial value expression environment
+		c) method environment
+		d) parent class
+	
+	Object:
+		a) instance variable values
+		b) true type class
+
+2. create a new top level interpreter that reads class definitions and stores them - DONE (mostly)
+
+3. change part 3's top level interpreter to read class body and return the class - DONE (pretty much)
+
+*if a method is not static append this to the formal parameters
+
+4. change part 2 of interpreter - DONE, not counting the fact a lof the the pret functions change for the other parts anyway
+	-each interpret function now takes a class and instance
+
+5. change how we lookup a name - in progress
+	a) take a name, class, instance
+		-lookup name in class and instance and return a val
+	b) take a env, class, instance
+		-lookup in the env first, then the class and instance
+
+6. handle dot expressions (e.g. a.x parsed as (dot a x)) - worked on, not tested.
+	-evaluate the left side to get class and instance
+
+7. update interpret assignment to store the value in the class
+	variable, instance value, or current environment
+
+8. functions
+	a) functions definitions - worked on, also not tested
+		-add a function that gets the owning class of the method to the closure
+
+	b) function calls - maybe done, depends on 7
+		i) called with a dot
+			-eval left-hand of dot and lookup in class
+		ii) without a dot
+			-if there is an instance lookup in the instance's class's method environment
+			-else lookup in function's class's method environment
+
+9. allow method overloading
+
+10. need binds/bind-deeps for classes and isntances
+
+11. test the damn thing
+
+
+From the prompt:
+
+Write an interpreter that correctly handles classes, static variables, and static methods. You should be able to set value for variables, call methods, and use super.
+
+Recall the suggested order from lecture to attack the problem.
+
+Create helper functions to create a new class and instance (will be needed for part 5) and to access the portions of a class and instance.
+Everywhere when interpreting statements and expressions that an environment is passed as a parameter, you also have to pass parameters for class and instance.
+Change the top level interpreter code that you used in part 3 to return a class instead of returning an environment.
+Change the top level interpreter code that you wrote for part 3 to expect static and non-static declarations for variables and functions.
+Create a new top level for the interpreter that reads a list of class definitions, and stores each class with its definition in the environment.
+Create a function that takes a variable, a class, and an instance, and checks if the variable is in the list of class or instance variables and returns its value.
+Create a function that takes a variable, and environment, a class, and an instance, if the variable is in the environment, look it up, otherwise look in the class and instance variables.
+Create a function that takes the left hand side of a dot expression and returns a (class, instance) pair representing the class and instance of the left hand side.
+Create a function that takes a dot expression, calls the above function to evaluate the left hand side, and looks up the right hand side in the class/instance variables.
+Update your code that interprets a function definition to add a new function to the closure that looks up the function's class in the environment.
+Update the code that evaluates a function call to deal with objects and classes.
+Update the code that interprets an assignment statement so that it looks for the variable in the environment, class and instance variables
+Create a new interpret function.
