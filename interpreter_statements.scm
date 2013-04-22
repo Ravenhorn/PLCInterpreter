@@ -1,26 +1,61 @@
 (load "interpreter_environment.scm")
 
 (define interpret-sl
-  (lambda (ptree env class instance ret brk cont)
+  (lambda (ptree env class instance ret brk contb throw)
     (cond
       ((null? ptree) env)
-      (else (interpret-sl (cdr ptree) (interpret-stmnt (car ptree) env class instance ret brk cont) class instance ret brk cont)))))
+      (else (interpret-sl (cdr ptree) (interpret-stmnt (car ptree) env class instance ret brk cont) class instance ret brk cont throw)))))
 
 (define interpret-stmnt
-  (lambda (stmnt env class instance ret brk cont)
+  (lambda (stmnt env class instance ret brk cont throw)
     (cond
       ;((pair? (car stmnt)) (interpret-stmnt (car stmnt) env))
       ((eq? '= (car stmnt)) (pret-assign stmnt env  class instance (lambda (val env) env)))
       ((eq? 'var (car stmnt)) (pret-declare stmnt env class instance))
-      ((eq? 'if (car stmnt)) (pret-if stmnt env class instance ret brk cont))
+      ((eq? 'if (car stmnt)) (pret-if stmnt env class instance ret brk cont throw))
       ((eq? 'return (car stmnt)) (ret (pret-return stmnt env class instance)))
-      ((eq? 'while (car stmnt)) (pop-frame (pret-while stmnt (push-frame env) class instance ret)))
+      ((eq? 'while (car stmnt)) (pop-frame (pret-while stmnt (push-frame env) class instance ret throw)))
       ((eq? 'break (car stmnt)) (brk env))
       ((eq? 'continue (car stmnt)) (cont env))
-      ((eq? 'begin (car stmnt)) (pop-frame (interpret-sl (cdr stmnt) (push-frame env) class instance ret brk cont)))
+      ((eq? 'begin (car stmnt)) (pop-frame (interpret-sl (cdr stmnt) (push-frame env) class instance ret brk cont throw)))
       ((eq? 'funcall (car stmnt)) (pret-funcall stmnt env class instance (lambda (retval) env)))
+      ((eq? 'try (car stmnt)) (pop-frame (pret-try stmnt env class instance ret brk cont throw)))
       ;((eq? 'dot (car stmnt)) (pret-dot stmnt env class instance))
       (else (error "invalid parse tree")))))
+
+(define pret-try 
+  (lambda (stmnt env class instance ret brk cont throw)
+    (call/cc (lambda (new_throw)
+               (cond
+                 ((null? (caddr stmnt)) (pret-try-no-catch stmnt env class instance ret brk cont throw new_throw))
+                 ((null? (cadddr stmnt)) (pret-try-no-finally stmnt env class instance ret brk cont throw new_throw))
+                 (else (pret-try-both stmnt env class instance ret brk cont throw new_throw)))))))
+
+      ;         (interpret-sl (cadr stmnt) (push-frame env) class instance ret brk cont
+       ;                      (cond
+           ;                    ((null? (caddr stmnt)) (lambda (v) (new_throw (interpret-sl (cadr (cadddr stmnt)) (push-frame env) class instance ret brk cont throw))))
+        ;                       ((null? (cadddr stmnt)) (lambda (v) (new_throw (interpret-sl (caddr (caddr stmnt)) (add-exception-val v (push-frame env)) class instance ret brk cont throw))))
+         ;                      (else (lambda (v) (new_throw (interpret-sl (cadr (cadddr stmnt)) 
+          ;                                                                (push-frame (pop-frame (interpret-sl (caddr (caddr stmnt)) (add-exception-val v (push-frame env)) class instance ret brk cont throw)))
+            ;                                                              class instance ret brk cont throw))))))
+(define pret-try-no-catch
+  (lambda (stmnt env class instance ret brk cont old_throw new_throw)
+    (let ((finally (lambda (continuation) (continuation (interpret-sl (cadr (cadddr stmnt)) (push-frame env) class instance ret brk cont old_throw)))))
+           (interpret-sl (cadr stmnt) (push-frame env) class instance (finally ret) (finally brk) (finally cont) (finally new_throw)))))
+
+(define pret-try-no-finally
+  (lambda (stmnt env class instance ret brk cont old_throw new_throw)
+    (interpret-sl (cadr stmnt) (push-frame env) class instance ret brk cont (lambda (v) (new_throw (interpret-sl (caddr (caddr stmnt)) (add-exception-val v (push-frame env)) class instance ret brk cont old_throw))))))
+
+(define pret-try-both
+  (lambda (stmnt env class instance ret brk cont old_throw new_throw)
+    (let ((finally (lambda (continuation) (continuation (interpret-sl (cadr (cadddr stmnt)) (push-frame env) class instance ret brk cont old_throw)))))
+    (interpret-sl (cadr stmnt) (push-frame env) class instance (finally ret) (finally brk) (finally cont) (lambda (v) (new_throw (interpret-sl (cadr (cadddr stmnt)) 
+                                                                          (push-frame (pop-frame (interpret-sl (caddr (caddr stmnt)) (add-exception-val v (push-frame env)) class instance ret brk cont old_throw)))
+                                                                          class instance ret brk cont old_throw)))))))
+;TODO
+;(define add-exception-val
+  ;(lambda (e env)
 
 ;k expects params class instance
 (define pret-dot
