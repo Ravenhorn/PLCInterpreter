@@ -18,8 +18,8 @@
 
 (define get-class-var-method-names
   (lambda (class)
-    (cons (caaaar class) (caar (caddr class)))))
+    (append (caaar class) (caar (caddr class)))))
 
 (define get-class-var-method-vals
   (lambda (class)
-    (cons (car (cadaar class)) (cadar (caddr class)))))
+    (append (cadaar class) (cadar (caddr class)))))

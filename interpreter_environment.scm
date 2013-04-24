@@ -156,3 +156,7 @@
                                                              ((eq? (length (car v)) numb_args) v)
                                                               (else (loop (name (cdr var_l) (cdr val_l))))))))))
       (loop (caar (caddr class)) (cadar (caddr class))))))
+
+(define add-exception-val
+  (lambda (val env)
+    (bind 'e val env)))

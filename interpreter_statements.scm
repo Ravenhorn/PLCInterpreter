@@ -1,10 +1,10 @@
 (load "interpreter_environment.scm")
 
 (define interpret-sl
-  (lambda (ptree env class instance ret brk contb throw)
+  (lambda (ptree env class instance ret brk cont throw)
     (cond
       ((null? ptree) env)
-      (else (interpret-sl (cdr ptree) (interpret-stmnt (car ptree) env class instance ret brk cont) class instance ret brk cont throw)))))
+      (else (interpret-sl (cdr ptree) (interpret-stmnt (car ptree) env class instance ret brk cont throw) class instance ret brk cont throw)))))
 
 (define interpret-stmnt
   (lambda (stmnt env class instance ret brk cont throw)
@@ -87,12 +87,12 @@
       (else #f))))
 
 (define pret-while
-  (lambda (stmnt enviro class instance return)
+  (lambda (stmnt enviro class instance return throw)
     (call/cc (lambda (break)
                (letrec ((loop (lambda (cond body env)
                                 (eval-if cond env class instance (lambda (if1 if_enviro)
                                                     (if  if1
-                                                        (loop cond body (interpret-stmnt body if_enviro class instance return break (lambda (e) (break (loop cond body (pop-frame e))))))
+                                                        (loop cond body (interpret-stmnt body if_enviro class instance return break (lambda (e) (break (loop cond body (pop-frame e)))) throw))
                                                         env))))))
                   (loop (cadr stmnt) (caddr stmnt) enviro))))))
 
@@ -123,18 +123,18 @@
       (else (begin (display "error on: ") (display stmnt) (newline) (error "variable not declared"))))))
 
 (define pret-if
-  (lambda (stmnt env class instance ret brk cont)
+  (lambda (stmnt env class instance ret brk cont trow)
     (eval-if (cadr stmnt) env class instance
              (lambda (if1 enviro)
                (cond
                  ((null? (cdddr stmnt)) ;no else
                   (cond
-                    (if1 (pop-frame (interpret-stmnt (caddr stmnt) (push-frame enviro) class instance ret brk cont)))
+                    (if1 (pop-frame (interpret-stmnt (caddr stmnt) (push-frame enviro) class instance ret brk cont throw)))
                     (else enviro))) 
                  (else ;has an else
                   (cond
-                    (if1 (pop-frame (interpret-stmnt (caddr stmnt) (push-frame enviro) class instance ret brk cont)))
-                    (else (pop-frame (interpret-stmnt (cadddr stmnt) (push-frame enviro) class instance ret brk cont))))))))))
+                    (if1 (pop-frame (interpret-stmnt (caddr stmnt) (push-frame enviro) class instance ret brk cont throw)))
+                    (else (pop-frame (interpret-stmnt (cadddr stmnt) (push-frame enviro) class instance ret brk cont throw))))))))))
 
 (define eval-if
   (lambda (if env class instance k)
@@ -187,7 +187,7 @@
 
 (define funcall-helper
   (lambda (stmnt closure env old_class old_instance new_class new_instance ret)
-     (interpret-sl (cadr closure) (setup-func-env stmnt closure env old_class old_instance) new_class new_instance ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop")))))
+     (interpret-sl (cadr closure) (setup-func-env stmnt closure env old_class old_instance) new_class new_instance ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop")) (lambda (v) (error "throw called outside try")))))
     
 (define setup-func-env
   (lambda (stmnt closure env old_class old_instance)
