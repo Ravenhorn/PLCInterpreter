@@ -76,6 +76,12 @@
   (lambda (var val env)
     (cons (cons (cons var (caar env)) (cons (cons (box val) (cadar env)) '())) (cdr env))))
 
+;(define bind-iv
+;#  (lambda (var val class)
+;#    (cond
+;      ((null? class) (error "null class"))
+;      (else (cons (car class) (cons (bind-deep var val (cadr class)) (cddr class)))))))
+
 (define bind-deep
   (lambda (var val env)
     (cond

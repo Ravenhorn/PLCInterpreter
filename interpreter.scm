@@ -20,7 +20,7 @@
                                                                                                                                       ((null? (get-parent-name (car ptree))) '())
                                                                                                                                       (else (lookup (get-parent-name (car ptree)) env '() '())))))                                                                                      
                                                                                                                                   (get-class-name (car ptree))) env) (lambda (v) (k v)))))))
-  
+
 ;(define interpret
  ; (lambda (filename)
   ;  (call/cc (lambda (ret)
@@ -37,5 +37,11 @@
     (cond
       ((eq? 'static-var (car stmnt)) (cons (pret-declare stmnt (car env) '() '()) (cdr env))) ;TODO are we sure about passing nulls to pret-declare?
       ((eq? 'static-function (car stmnt)) (insert-class-method (pret-func-def stmnt (caddr env) name) env))
-      ;(else (error (car stmnt))))))
+      ((eq? 'var (car stmnt)) (cons (pret-declare stmnt (cadr env) '() '())))
+      ((eq? 'function (car stmnt)) (insert-class-method (pret-func-def stmnt (caddr env) name) env))
       (else (error "invalid global parse tree")))))
+
+(define construct
+  (lambda (class args)
+    (cond
+      ((null? (lookup ))))))
