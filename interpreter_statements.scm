@@ -193,6 +193,10 @@
     (lookup-method name class (length args))))
     ;(lookup name '() class '())))
 
+(define get-const
+  (lambda (class args)
+    (lookup-method (car (cddddr class)) class args)))
+
 (define funcall-helper ;Interprets statement list of the function
   (lambda (stmnt closure env old_class old_instance new_class new_instance ret)
      (interpret-sl (cadr closure) (setup-func-env stmnt closure env old_class old_instance) new_class new_instance ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop")) (lambda (v) (error "throw called outside try")))))
