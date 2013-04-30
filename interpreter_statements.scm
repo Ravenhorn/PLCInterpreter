@@ -67,17 +67,17 @@
   (lambda (lhs env class instance k)
     (cond
       ((eq? 'super lhs) (k (get-parent class) instance))
-      ((eq? 'this lhs) (error "handle this")) ; handle this for next time
-      (else (handle-left-helper (lookup lhs env class instance) k)))))
+      ((eq? 'this lhs) (k class instance)) ; handle this for next time
+      (else (handle-left-helper (lookup lhs env class instance) env k)))))
 
 (define get-parent
   (lambda (class)
     (cadddr class)))
 
 (define handle-left-helper
-  (lambda (lookup_val k)
+  (lambda (lookup_val env k)
     (cond    
-      ((instance? lookup_val) (k (get-class lookup_val) lookup_val))
+      ((instance? lookup_val) (k (get-instance-class lookup_val env) lookup_val))
       (else (k lookup_val '())))))
 
 (define instance?
@@ -123,7 +123,7 @@
       (else (begin (display "error on: ") (display stmnt) (newline) (error "variable not declared"))))))
 
 (define pret-if
-  (lambda (stmnt env class instance ret brk cont trow)
+  (lambda (stmnt env class instance ret brk cont throw)
     (eval-if (cadr stmnt) env class instance
              (lambda (if1 enviro)
                (cond
@@ -185,8 +185,12 @@
                     (else
                      (cond
                        ((null? instance) (funcall-helper stmnt (get-method (cadr stmnt) class (cddr stmnt)) env class instance ((cadddr (get-method (cadr stmnt) class (cddr stmnt))) env) '() ret))
-                        (else (funcall-helper stmnt (get-method (cadr stmnt) (get-instance-class instance) (cddr stmnt)) env class instance (get-instance-class instance) instance ret))))))))))
+                        (else (funcall-helper stmnt (get-method (cadr stmnt) (get-instance-class instance env) (cddr stmnt)) env class instance (get-instance-class instance) instance ret))))))))))
                ;(interpret-sl (cadr (lookup (cadr stmnt) env class instance)) (setup-func-env stmnt env class instance) class instance ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop"))))))))
+
+(define get-instance-class 
+ (lambda (name env)
+   (lookup name env '() '())))
 
 (define get-method
   (lambda (name class args)
@@ -212,7 +216,7 @@
 ;TODO finish class/instance binding once bind works for class instances
 (define assign-args
   (lambda (params args func_env old_env old_class old_instance)
-    (cond
+     (cond
       ((null? params) func_env)
       ;((list? (car params)) (handle-dot))
       ((eq? '& (car params)) (assign-args (cddr params) (cdr args) (bind-box (cadr params) (get-box-for-ref (car args) old_env) func_env) old_env old_class old_instance))
@@ -230,10 +234,10 @@
                           (get-inst-env (cadadr class) class new-instance (lambda (i) (funcall-helper (cons 'funcall (cons name args)) (get-const class args) (new-env) class instance new-class i (error "ret") (error "brk") (error "cont") (error "throw")))))))))
 
 (define get-inst-env
-  (lambda (inst-exprs class instance k)
+  (lambda (inst-exprs inst-vals class instance k)
     (cond
-      ((null? inst-exprs) (k instance))
-      (else (value (car inst-exprs) (new-env) class (unbox instance) (lambda (v e) (get-inst-env (cdr inst-exprs) class (set-box! instance (cons (cons (box v) (car (unbox instance))) (cdr (unbox instance)))) (lambda (v) (k (unbox v)))))))))))
+      ((null? inst-exprs) (k inst-vals))
+      (else (value (car inst-exprs) (new-env) class instance (lambda (v e) (get-inst-env (cdr inst-exprs) class cons  (lambda (i2) (k (append i2 i1))))))))))
 
 (define getBool
   (lambda (op)
