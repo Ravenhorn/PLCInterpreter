@@ -216,21 +216,20 @@
 
 (define new-inst
   (lambda (name args env class instance)
-    (pret-const name args (get-own-class) (box '()) (lambda (v) v))))
+    (pret-const name args (get-own-class) (box (cons '() (cons ))))
 
 (define pret-const
-  (lambda (args class instance k)
+  (lambda (args class instance)
     (cond
-      ((null? (cadddr class)) (interpret-sl (cadr (get-const class args)) '() class (get-inst-env (cadadr class) '() class instance) (error "ret") (error "brk") (error "cont") (error "throw"))) ;pretend that this returns the instance
-      (else (pret-const args (cadddr class) instance
-                        (lambda (v)
-                          ((interpret-sl (cadr (get-const class args)) '() class (get-inst-env (cadadr class) '() class instance) (error "ret") (error "brk") (error "cont") (error "throw")))))))))
+      ((null? (cadddr class)) (interpret-sl (cadr (get-const class args)) (new-env) class (get-inst-env (cadadr class) '() class instance) (error "ret") (error "brk") (error "cont") (error "throw"))) ;pretend that this returns the instance
+      (else (begin (pret-const args (cadddr class) instance)
+                          ((interpret-sl (cadr (get-const class args)) (new-env) class (get-inst-env (cadadr class) '() class instance) (error "ret") (error "brk") (error "cont") (error "throw")))))))))
 
 (define get-inst-env
-  (lambda (inst-exprs inst-vals class instance)
+  (lambda (inst-exprs inst-vals class instance k)
     (cond
-      ((null? inst-exprs) inst-vals)
-      (else (cons (get-inst-env (cdr inst-exprs) env class instance) (cons (value (car inst-exprs) '() class instance (lambda (v) v)) '()))))))
+      ((null? inst-exprs) (k inst-vals))
+      (else (value (car inst-exprs) (new-env) class instance (lambda (v e) (get-inst-env (cdr inst-exprs) class cons  (lambda (i2) (k (append i2 i1))))))))))
 
 (define getBool
   (lambda (op)
