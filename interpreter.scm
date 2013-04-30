@@ -9,7 +9,7 @@
 (define interpret
   (lambda (filename mainclass)
     (call/cc (lambda (ret)
-               (interpret-class-sl (parser filename) (new-env) (lambda (v): (interpret-sl (cadr (lookup 'main '() (lookup mainclass v '() '()) '())) v (lookup mainclass v '() '()) '() ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop")) (lambda (error) (error "throw called outside try")))))))))
+               (interpret-class-sl (parser filename) (new-env) (lambda (v) (interpret-sl (cadr (lookup 'main '() (lookup mainclass v '() '()) '())) v (lookup mainclass v '() '()) '() ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop")) (lambda (error) (error "throw called outside try")))))))))
 
 (define interpret-class-sl
   (lambda (ptree env k) 
