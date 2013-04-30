@@ -24,8 +24,8 @@ class B extends A {
   }
 
   static main() {
-    var a = new B(3);
-	return a.test();
+	x = 9;
+	return c;
   }
 
  test() {
