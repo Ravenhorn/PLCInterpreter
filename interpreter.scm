@@ -15,11 +15,11 @@
   (lambda (ptree env k) 
     (cond
       ((null? ptree) (k env))
-      (else (interpret-class-sl (cdr ptree) (bind (cadar ptree) (interpret-class-body (get-class-body (car ptree)) (new-class-env (begin 
+      (else (interpret-class-sl (cdr ptree) (bind (cadar ptree) (cons (interpret-class-body (get-class-body (car ptree)) (new-class-env (begin 
                                                                                                                                     (cond
                                                                                                                                       ((null? (get-parent-name (car ptree))) '())
                                                                                                                                       (else (lookup (get-parent-name (car ptree)) env '() '())))) (get-class-name (car ptree)))                                                                                      
-                                                                                                                                  (get-class-name (car ptree))) env) (lambda (v) (k v)))))))
+                                                                                                                                  (get-class-name (car ptree))) env) (get-class-name (car ptree))) (lambda (v) (k v)))))))
 
 ;(define interpret
  ; (lambda (filename)
