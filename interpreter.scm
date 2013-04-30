@@ -34,8 +34,9 @@
 
 (define interpret-class-stmnt
   (lambda (stmnt env name)
+    ;(begin (display 'HEY) (display stmnt) (newline) (display env) (newline)
     (cond
-      ((eq? 'static-var (car stmnt)) (cons (pret-declare stmnt (car env) '() '()) (cdr env))) ;TODO are we sure about passing nulls to pret-declare?
+      ((eq? 'static-var (car stmnt)) (cons (pret-declare stmnt (car env) (faux-class (cadddr env)) '()) (cdr env))) 
       ((eq? 'static-function (car stmnt)) (insert-class-method (pret-func-def stmnt (caddr env) name) env))
       ;(else (error (car stmnt))))))
       (else (error "invalid global parse tree")))))

@@ -18,10 +18,10 @@
       ((not (null? env))  (lookup-env var env (lambda (val)
                                                (cond
                                                  ((not (null? val)) val)
-                                                 (else (lookup-ci var class instance (lambda (val)
+                                                 (else (lookup-ci var class instance (lambda (val2)
                                                                                        (cond
-                                                                                         ((null? val) (begin (display "error on: ") (display var) (newline) (error "variable not declared")))
-                                                                                         (else val)))))))))
+                                                                                         ((null? val2) (begin (display "error on: ") (display var) (newline) (error "variable not declared")))
+                                                                                         (else val2)))))))))
       (else (lookup-ci var class instance (lambda (val)
                                             (cond
                                               ((null? val) (begin (display "error on: ") (display var) (newline) (error "variable not declared")))
@@ -30,7 +30,7 @@
 (define lookup-env
   (lambda (var env k)
     (cond
-      ((null? env) '())
+      ((null? env) (k '()))
       ((not (null? (lookvar var (caar env) (cadar env) (lambda (v) v)))) (lookvar var (caar env) (cadar env) (lambda (v) (k v)))) ;turn this into a continuation
       (else (lookup-env var (cdr env) (lambda (v) (k v)))))))
 
@@ -38,10 +38,7 @@
   (lambda (var varlist vallist k)
     (cond
       ((null? varlist) (k '()))
-      ((eq? var (car varlist))
-       (cond
-         ((null? (unbox (car vallist))) (begin (display "error on: ") (display var) (newline) (error "variable not initialized")))
-         (else (k (unbox (car vallist))))))
+      ((eq? var (car varlist)) (k (unbox (car vallist))))
       (else (k (lookvar var (cdr varlist) (cdr vallist) (lambda (v) v)))))))
 
 (define lookup-ci
@@ -56,13 +53,13 @@
   (lambda (var class k)
     (cond
       ((null? class) (k '()))
-      (else (k (lookvar var 
+      (else (lookvar var 
                         (reverse (get-class-var-method-names class))
                         (reverse (get-class-var-method-vals class))
                         (lambda (v)
                           (cond
-                            ((null? v) (lookup-class var (cadddr class) (lambda (v) v)))
-                            (else v)))))))))
+                            ((null? v) (lookup-class var (cadddr class) (lambda (v) (k v))))
+                            (else (k v)))))))))
       ;(else (k (lookvar var (reverse (car class)) (reverse (cadr class)))))))) 
 
 (define lookup-instance
@@ -153,8 +150,9 @@
   (lambda (name class numb_args)
     (letrec ((loop (lambda (var_l val_l)
                      (lookvar name var_l val_l (lambda (v) (cond
+                                                             ((null? v) (lookup-method name (cadddr class) numb_args))
                                                              ((eq? (length (car v)) numb_args) v)
-                                                              (else (loop (name (cdr var_l) (cdr val_l))))))))))
+                                                             (else (loop (cdr var_l) (cdr val_l)))))))))
       (loop (caar (caddr class)) (cadar (caddr class))))))
 
 (define add-exception-val

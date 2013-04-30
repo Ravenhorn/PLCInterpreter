@@ -23,3 +23,7 @@
 (define get-class-var-method-vals
   (lambda (class)
     (append (cadaar class) (cadar (caddr class)))))
+
+(define faux-class
+  (lambda (parent)
+    (cons '((()())) (cons '((()())) (cons '((() ()))  (cons parent '()))))))
