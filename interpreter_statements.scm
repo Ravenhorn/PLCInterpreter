@@ -216,25 +216,21 @@
 
 (define new-inst
   (lambda (name args env class instance)
-    (pret-const name args (get-own-class) (get-inst-env get-own-class))))
+    (pret-const name args (get-own-class) (box '()) (lambda (v) v))))
 
 (define pret-const
   (lambda (args class instance k)
     (cond
-      ((null? (cadddr class)) (k (interpret-sl (cadr (get-const class args)) '() class (get-inst-env (cadadr class) '() (error "ret") (error "brk") (error "cont") (error "throw"))))
-      (else (pret-const args (cadddr class) instance) (interpret-sl (cadr (get-const class args)) '() class instance (error "ret") (error "brk") (error "cont") (error "throw")))))))
-
-
+      ((null? (cadddr class)) (interpret-sl (cadr (get-const class args)) '() class (get-inst-env (cadadr class) '() class instance) (error "ret") (error "brk") (error "cont") (error "throw"))) ;pretend that this returns the instance
+      (else (pret-const args (cadddr class) instance
+                        (lambda (v)
+                          ((interpret-sl (cadr (get-const class args)) '() class (get-inst-env (cadadr class) '() class instance) (error "ret") (error "brk") (error "cont") (error "throw")))))))))
 
 (define get-inst-env
-  (lambda (inst-exprs inst-vals env class instance)
+  (lambda (inst-exprs inst-vals class instance)
     (cond
-      ((null? parent-inst-vals) inst-vals)
-      (else (cons (get-inst-env (cdr own-inst-vals) env class instance) (cons (value (car own-inst-vals) '() class '() (lambda (v) v)) '()))))))
-
-(define get-inst-env
-  (lambda (pclass)
-    (value )))
+      ((null? inst-exprs) inst-vals)
+      (else (cons (get-inst-env (cdr inst-exprs) env class instance) (cons (value (car inst-exprs) '() class instance (lambda (v) v)) '()))))))
 
 (define getBool
   (lambda (op)
