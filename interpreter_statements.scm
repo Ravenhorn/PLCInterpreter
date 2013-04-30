@@ -229,9 +229,9 @@
 (define pret-const
   (lambda (name args class instance new-class new-instance)
     (begin (cond
-      ((null? (cadddr new-class)) (get-inst-env (cadr (caadr new-class)) '() new-class new-instance (lambda (i) (funcall-helper (cons 'funcall (cons name args)) (get-const new-class args) (new-env) class instance new-class i (error "ret") (error "brk") (error "cont") (error "throw")))))
+      ((null? (cadddr new-class)) (get-inst-env (cadr (caadr new-class)) '() new-class new-instance (lambda (i) (funcall-helper (cons 'funcall (cons name args)) (get-const new-class args) (new-env) class instance new-class i (lambda (env) (error "ret"))))))
       (else (begin (pret-const name args class instance (cadddr new-class) new-instance)
-                          (get-inst-env (cadr (caadr new-class)) '() new-class new-instance (lambda (i) (funcall-helper (cons 'funcall (cons name args)) (get-const new-class args) (new-env) class instance new-class i (error "ret") (error "brk") (error "cont") (error "throw")))))))
+                          (get-inst-env (cadr (caadr new-class)) '() new-class new-instance (lambda (i) (funcall-helper (cons 'funcall (cons name args)) (get-const new-class args) (new-env) class instance new-class i (lambda (env) (error "ret"))))))))
            new-instance)))
 
 (define get-inst-env
