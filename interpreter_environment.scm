@@ -162,10 +162,14 @@
   (lambda (name class numb_args)
     (letrec ((loop (lambda (var_l val_l)
                      (lookvar name var_l val_l (lambda (v) (cond
-                                                             ((null? v) (lookup-method name (cadddr class) numb_args))
+                                                             ((null? v)  (lookup-method name (cadddr class) numb_args))
                                                              ((eq? (length (car v)) numb_args) v)
-                                                             (else (loop (cdr var_l) (cdr val_l)))))))))
-      (loop (caar (caddr class)) (cadar (caddr class))))))
+                                                             (else (loop (cdr var_l) (cdr val_l))))))))
+             (frame (lambda (env var_l val_l)
+                     (cond
+                        ((null? env) (loop var_l val_l))
+                        (else (frame (cdr env) (append (caar env) var_l) (append (cadar env) val_l)))))))
+        (frame  (caddr class) '() '()))))
 
 (define make-def-const
   (lambda (env name)
