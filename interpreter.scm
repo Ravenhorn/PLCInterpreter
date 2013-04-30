@@ -40,6 +40,6 @@
        (cond
          ((eq? (cadr stmnt) name) (insert-class-method (cons (caaddr env) (pret-func-def stmnt (cdaddr env) name)) env)) ;The constructor?
          (else (insert-class-method (pret-func-def stmnt (caddr env) name) env)))) ;Something else
-      ((eq? 'var (car stmnt)) (cons (pret-declare stmnt (cadr env) '() '()) '()))
+      ((eq? 'var (car stmnt)) (insert-inst-var (bind (cadr stmnt) (caddr stmnt) (cadr env)) env))
       ((eq? 'function (car stmnt)) (insert-class-method (pret-func-def stmnt (caddr env) name) env))
       (else (error "invalid global parse tree")))))

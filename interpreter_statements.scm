@@ -216,7 +216,25 @@
 
 (define new-inst
   (lambda (name args env class instance)
-    (pret-funcall (cons 'funcall (cons name args)) env class instance (lambda (v) v))))
+    (pret-const name args (get-own-class) (get-inst-env get-own-class))))
+
+(define pret-const
+  (lambda (args class instance k)
+    (cond
+      ((null? (cadddr class)) (k (interpret-sl (cadr (get-const class args)) '() class (get-inst-env (cadadr class) '() (error "ret") (error "brk") (error "cont") (error "throw"))))
+      (else (pret-const args (cadddr class) instance) (interpret-sl (cadr (get-const class args)) '() class instance (error "ret") (error "brk") (error "cont") (error "throw")))))))
+
+
+
+(define get-inst-env
+  (lambda (inst-exprs inst-vals env class instance)
+    (cond
+      ((null? parent-inst-vals) inst-vals)
+      (else (cons (get-inst-env (cdr own-inst-vals) env class instance) (cons (value (car own-inst-vals) '() class '() (lambda (v) v)) '()))))))
+
+(define get-inst-env
+  (lambda (pclass)
+    (value 
 
 (define getBool
   (lambda (op)

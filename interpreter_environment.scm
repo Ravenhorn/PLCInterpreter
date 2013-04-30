@@ -153,7 +153,9 @@
 
 (define new-class-env
   (lambda (parent name)
-    (cons (new-env) (cons (new-env) (cons (push-frame (make-def-const (new-env) name)) (cons parent '()))))))
+    (cond
+      ((null? parent) (cons (new-env) (cons (new-env) (cons (push-frame (make-def-const (new-env) name)) (cons parent '())))))
+      (else (cons (new-env) (cons (cadr parent) (cons (push-frame (make-def-const (new-env) name)) (cons parent '()))))))))
 
 (define lookup-method
   (lambda (name class numb_args)
