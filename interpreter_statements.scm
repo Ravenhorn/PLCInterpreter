@@ -234,7 +234,7 @@
 
 (define get-inst-env
   (lambda (pclass)
-    (value 
+    (value )))
 
 (define getBool
   (lambda (op)
