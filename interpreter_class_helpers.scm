@@ -24,6 +24,10 @@
   (lambda (class)
     (append (cadaar class) (cadar (caddr class)))))
 
+(define get-instance-var-method-names
+  (lambda (class)
+    (caaadr class)))
+
 (define faux-class
   (lambda (parent)
     (cons '((()())) (cons '((()())) (cons '((() ()))  (cons parent '()))))))

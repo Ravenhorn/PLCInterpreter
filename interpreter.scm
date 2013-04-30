@@ -18,9 +18,9 @@
       (else (interpret-class-sl (cdr ptree) (bind (cadar ptree) (interpret-class-body (get-class-body (car ptree)) (new-class-env (begin 
                                                                                                                                     (cond
                                                                                                                                       ((null? (get-parent-name (car ptree))) '())
-                                                                                                                                      (else (lookup (get-parent-name (car ptree)) env '() '())))))                                                                                      
+                                                                                                                                      (else (lookup (get-parent-name (car ptree)) env '() '())))) (get-class-name (car ptree)))                                                                                      
                                                                                                                                   (get-class-name (car ptree))) env) (lambda (v) (k v)))))))
-  
+
 ;(define interpret
  ; (lambda (filename)
   ;  (call/cc (lambda (ret)
@@ -36,7 +36,11 @@
   (lambda (stmnt env name)
     ;(begin (display 'HEY) (display stmnt) (newline) (display env) (newline)
     (cond
-      ((eq? 'static-var (car stmnt)) (cons (pret-declare stmnt (car env) (faux-class (cadddr env)) '()) (cdr env))) 
-      ((eq? 'static-function (car stmnt)) (insert-class-method (pret-func-def stmnt (caddr env) name) env))
-      ;(else (error (car stmnt))))))
+      ((eq? 'static-var (car stmnt)) (cons (pret-declare stmnt (car env) (faux-class (cadddr env)) '()) (cdr env))) ;TODO are we sure about passing nulls to pret-declare?
+      ((eq? 'static-function (car stmnt)) ;A static function?
+       (cond
+         ((eq? (cadr stmnt) name) (insert-class-method (cons (caaddr env) (pret-func-def stmnt (cdaddr env) name)) env)) ;The constructor?
+         (else (insert-class-method (pret-func-def stmnt (caddr env) name) env)))) ;Something else
+      ((eq? 'var (car stmnt)) (insert-inst-var (bind (cadr stmnt) (caddr stmnt) (cadr env)) env))
+      ((eq? 'function (car stmnt)) (insert-class-method (pret-func-def stmnt (caddr env) name) env))
       (else (error "invalid global parse tree")))))

@@ -66,12 +66,22 @@
   (lambda (var class instance k)
     (cond
       ((null? instance) (k '()))
-      (else (k (lookvar var (reverse (get-class-var-method-names class)) (reverse (car instance)) (lambda (v) v))))))) ;will need to be changed when objects implemented
+      (else (lookvar var (get-instance-var-names class) (car instance) (lambda (v) (k v)))))))
       ;(else (k (lookvar var (reverse (car class)) (reverse (car instance)))))))) ;<-- same problem as lookup-class
+
+(define bind-instance
+  (lambda (var val class instance)
+    (handle-box (var val (cons (cons (get-instance-var-names class) (cons (car instance) '())) '()) (lambda (box env) (instance))))))
 
 (define bind
   (lambda (var val env)
     (cons (cons (cons var (caar env)) (cons (cons (box val) (cadar env)) '())) (cdr env))))
+
+;(define bind-iv
+;#  (lambda (var val class)
+;#    (cond
+;      ((null? class) (error "null class"))
+;      (else (cons (car class) (cons (bind-deep var val (cadr class)) (cddr class)))))))
 
 (define bind-deep
   (lambda (var val env)
@@ -143,8 +153,10 @@
     (lookup name env '() '())))
 
 (define new-class-env
-  (lambda (parent)
-    (cons (new-env) (cons (new-env) (cons (new-env) (cons parent '()))))))
+  (lambda (parent name)
+    (cond
+      ((null? parent) (cons (new-env) (cons (new-env) (cons (push-frame (make-def-const (new-env) name)) (cons parent '())))))
+      (else (cons (new-env) (cons (cadr parent) (cons (push-frame (make-def-const (new-env) name)) (cons parent '()))))))))
 
 (define lookup-method
   (lambda (name class numb_args)
@@ -154,6 +166,10 @@
                                                              ((eq? (length (car v)) numb_args) v)
                                                              (else (loop (cdr var_l) (cdr val_l)))))))))
       (loop (caar (caddr class)) (cadar (caddr class))))))
+
+(define make-def-const
+  (lambda (env name)
+    (bind name '(() ((funcall super))) env)))
 
 (define add-exception-val
   (lambda (val env)

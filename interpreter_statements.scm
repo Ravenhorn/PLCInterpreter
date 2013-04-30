@@ -160,6 +160,7 @@
       ((eq? 'funcall (car expr)) (k (pret-funcall expr env class instance (lambda (retval) retval)) env))
       ((eq? '! (car expr)) (value (cdr expr) env class instance (lambda (vals enviro) (k (not vals) enviro))))
       ((eq? 'dot (car expr)) (pret-dot expr env class instance (lambda (c i) (k  (lookup (caddr expr) '() c i) env))))
+      ((eq? 'new (car expr)) (k (new-inst (cadr expr) (cddr expr) env class instance)))
       ((and (eq? '- (car expr)) (null? (cddr expr))) (value (cdr expr) env class instance (lambda (vals enviro) (k (* -1 vals) enviro))))
       (else (value (cadr expr) env class instance (lambda (val enviro) (value (caddr expr) enviro class instance 
                                              (lambda (val2 enviro2) (k ((getOp (car expr)) val val2) enviro2)))))))))
@@ -169,6 +170,13 @@
     (bind (cadr stmnt)
           (cons (caddr stmnt) (cons (cadddr stmnt) (cons (lambda (v) (get-func-env v)) ;<--handle recursion
                                                          (cons (lambda (enviro) (get-func-class name enviro))'())))) env)))
+
+;(define pret-const-def
+;  (lambda (stmnt env name)
+;    (bind (cadr stmnt)
+;          (cons (caddr stmnt) (cons (cadddr stmnt) (cons (lambda (v) (get-func-env v))
+;                                                         (cons (lambda (enviro) (get-func-class name enviro)) '())))) (cdr env))))
+
 (define pret-funcall
   (lambda (stmnt env class instance k)
     (k (call/cc (lambda (ret)
@@ -185,7 +193,7 @@
     (lookup-method name class (length args))))
     ;(lookup name '() class '())))
 
-(define funcall-helper
+(define funcall-helper ;Interprets statement list of the function
   (lambda (stmnt closure env old_class old_instance new_class new_instance ret)
      (interpret-sl (cadr closure) (setup-func-env stmnt closure env old_class old_instance) new_class new_instance ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop")) (lambda (v) (error "throw called outside try")))))
     
@@ -205,6 +213,28 @@
       ;((list? (car params)) (handle-dot))
       ((eq? '& (car params)) (assign-args (cddr params) (cdr args) (bind-box (cadr params) (get-box-for-ref (car args) old_env) func_env) old_env old_class old_instance))
       (else (value (car args) old_env old_class old_instance (lambda (val env) (assign-args (cdr params) (cdr args) (bind (car params) val func_env) env old_class old_instance)))))))
+
+(define new-inst
+  (lambda (name args env class instance)
+    (pret-const name args (get-own-class) (get-inst-env get-own-class))))
+
+(define pret-const
+  (lambda (args class instance k)
+    (cond
+      ((null? (cadddr class)) (k (interpret-sl (cadr (get-const class args)) '() class (get-inst-env (cadadr class) '() (error "ret") (error "brk") (error "cont") (error "throw"))))
+      (else (pret-const args (cadddr class) instance) (interpret-sl (cadr (get-const class args)) '() class instance (error "ret") (error "brk") (error "cont") (error "throw")))))))
+
+
+
+(define get-inst-env
+  (lambda (inst-exprs inst-vals env class instance)
+    (cond
+      ((null? parent-inst-vals) inst-vals)
+      (else (cons (get-inst-env (cdr own-inst-vals) env class instance) (cons (value (car own-inst-vals) '() class '() (lambda (v) v)) '()))))))
+
+(define get-inst-env
+  (lambda (pclass)
+    (value )))
 
 (define getBool
   (lambda (op)
