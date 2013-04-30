@@ -199,8 +199,20 @@
     ;(lookup name '() class '())))
 
 (define get-const
+  (lambda (class args k)
+    (k (lookup-method (car (cddddr class)) class (length args)))))
+
+(define get-next-args
   (lambda (class args)
-    (lookup-method (car (cddddr class)) class (length args))))
+    (get-const class args
+               (lambda (constr)
+                 (cond
+                   ((null? (cadr constr)) '())
+                   ((list? (caadr constr))
+                    (cond
+                      ((and (eq? (car (caadr constr)) 'funcall) (eq? (cadr (caadr constr)) 'super)) (cddr (caadr constr)))
+                      (else '())))
+                   (else '()))))))
 
 (define funcall-helper ;Interprets statement list of the function
   (lambda (stmnt closure env old_class old_instance new_class new_instance ret)
@@ -230,9 +242,9 @@
 (define pret-const
   (lambda (name args class instance new-class new-instance)
     (begin (cond
-      ((null? (cadddr new-class)) (get-inst-env (cadr (caadr new-class)) new-class new-instance (lambda (i) (funcall-helper (cons 'funcall (cons name args)) (get-const new-class args) (new-env) class instance new-class i (lambda (env) (error "ret"))))))
-      (else (begin (pret-const name args class instance (cadddr new-class) new-instance)
-                          (get-inst-env (cadr (caadr new-class)) new-class new-instance (lambda (i) (funcall-helper (cons 'funcall (cons name args)) (get-const new-class args) (new-env) class instance new-class i (lambda (env) (error "ret"))))))))
+      ((null? (cadddr new-class)) (get-inst-env (cadr (caadr new-class)) new-class new-instance (lambda (i) (get-const new-class args (lambda (constr) (funcall-helper (cons 'funcall (cons name args)) constr (new-env) class instance new-class i (lambda (env) (error "ret"))))))))
+      (else (begin (pret-const name (get-next-args new-class args) class instance (cadddr new-class) new-instance)
+                          (get-inst-env (cadr (caadr new-class)) new-class new-instance (lambda (i) (get-const new-class args (lambda (constr) (funcall-helper (cons 'funcall (cons name args)) constr (new-env) class instance new-class i (lambda (env) (error "ret"))))))))))
            (cond
              ((box? new-instance) (unbox new-instance))
              (else new-instance)))))
