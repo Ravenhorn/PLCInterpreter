@@ -199,7 +199,7 @@
 
 (define get-const
   (lambda (class args)
-    (lookup-method (car (cddddr class)) class args)))
+    (lookup-method (car (cddddr class)) class (length args))))
 
 (define funcall-helper ;Interprets statement list of the function
   (lambda (stmnt closure env old_class old_instance new_class new_instance ret)

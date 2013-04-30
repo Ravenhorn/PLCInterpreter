@@ -28,7 +28,7 @@
   (lambda (class)
     (append (cadaar class) (cadar (caddr class)))))
 
-(define get-instance-var-method-names
+(define get-instance-var-names
   (lambda (class)
     (caaadr class)))
 
