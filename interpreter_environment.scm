@@ -169,7 +169,7 @@
 
 (define make-def-const
   (lambda (env name)
-    (bind name '(() ()) env)))
+    (bind name '(() () (lambda (var) (error "trying to recurse on the constructor")) (lambda (var) (error "Trying to find the constructor's class"))) env)))
 
 (define add-exception-val
   (lambda (val env)
