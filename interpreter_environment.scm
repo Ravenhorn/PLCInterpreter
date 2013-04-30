@@ -121,7 +121,7 @@
                                  (declared-class? var class (lambda (w) 
                                                               (if w
                                                                   #t
-                                                                  (declared-inst? var class inst (lambda (x) x))))))))))
+                                                                  (declared-inst? var class (lambda (x) x))))))))))
 
 (define declared-env?
   (lambda (var env k)
@@ -140,12 +140,10 @@
       (else (k (declared-env? var (car class) (lambda (v) v)))))))
 
 (define declared-inst?
-  (lambda (var class inst k)
+  (lambda (var class k)
     (cond
       ((null? class) (k #f))
       ((null? var) (k #f))
-      ((null? inst) (k #f))
-      ((null? (car inst)) (k #f))
       (else (declared-env? var (caadr class) (lambda (f) (k f)))))))
 
 (define get-func-env
