@@ -61,7 +61,7 @@
 ;k expects params class instance
 (define pret-dot
   (lambda (stmnt env class instance k)
-    (handle-left (cadr stmnt) env class instance (lambda (c i) (k c i)))))
+    (begin (handle-left (cadr stmnt) env class instance (lambda (c i) (k c i))))))
 
 (define handle-left
   (lambda (lhs env class instance k)
@@ -189,7 +189,11 @@
                         (else (funcall-helper stmnt (get-method (cadr stmnt) (get-instance-class instance env) (cddr stmnt)) env class instance (get-instance-class instance) instance ret))))))))))
                ;(interpret-sl (cadr (lookup (cadr stmnt) env class instance)) (setup-func-env stmnt env class instance) class instance ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop"))))))))
 
-(define get-instance-class 
+(define get-instance-class
+  (lambda (in env)
+    (lookup (cadr in) env '() '())))
+
+(define get-instance
  (lambda (name env)
    (lookup name env '() '())))
 

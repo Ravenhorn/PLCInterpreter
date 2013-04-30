@@ -1,5 +1,5 @@
 class A {
-  static var x = 10;
+  static var c = 10;
   static var y = 20;
 
   static add(a, b) {
@@ -15,12 +15,20 @@ class B extends A {
   var x = 2;
   static var y = 30;
 
+  static B(a) {
+	x = a;
+	}
+
   static add(a,b) {
     return a*b;
   }
 
   static main() {
-    var a = new B();
-	return a.x;
+    var a = new B(3);
+	return a.test();
   }
+
+ test() {
+	return this.x;
+ }
 }
