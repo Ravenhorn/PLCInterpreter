@@ -37,7 +37,7 @@
 (define lookvar
   (lambda (var varlist vallist k)
     (cond
-      ((null? varlist) (k '()))
+      ((or (null? varlist) (null? vallist)) (k '()))
       ((eq? var (car varlist)) (k (unbox (car vallist))))
       (else (k (lookvar var (cdr varlist) (cdr vallist) (lambda (v) v)))))))
 
