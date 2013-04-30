@@ -118,8 +118,8 @@
       ((null? stmnt) (error "null arg passed to assign"))
       ((null? (cddr stmnt)) (error "no value to assign"))
       ((list? (cadr stmnt)) (pret-dot (cadr stmnt) env class instance (lambda (c i)
-                                                                     (bind-deep (caddr (cadr stmnt)) (value (caddr stmnt) env class instance (lambda (v) v)) (car c))))) ;add a cond for objects
-      ((declared? (cadr stmnt) env class) (value (caddr stmnt) env class instance (lambda (val enviro) (k val (bind-deep (cadr stmnt) val (cons (caar class) enviro)) ))))
+                                                                     (bind-deep (caddr (cadr stmnt)) (value (caddr stmnt) env class instance (lambda (e v) v)) (get-all-class-env (cadddr c) (car c)))))) ;add a cond for objects
+      ((declared? (cadr stmnt) env class) (value (caddr stmnt) env class instance (lambda (val enviro) (k val (bind-deep (cadr stmnt) val (append (get-all-class-env (cadddr class) (car class)) enviro)) ))))
       (else (begin (display "error on: ") (display stmnt) (newline) (error "variable not declared"))))))
 
 (define pret-if
