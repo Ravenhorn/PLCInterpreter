@@ -152,8 +152,8 @@
     (lookup name env '() '())))
 
 (define new-class-env
-  (lambda (parent)
-    (cons (new-env) (cons (new-env) (cons (new-env) (cons parent '()))))))
+  (lambda (parent name)
+    (cons (new-env) (cons (new-env) (cons (push-frame (make-def-const (new-env) name)) (cons parent '()))))))
 
 (define lookup-method
   (lambda (name class numb_args)
@@ -162,6 +162,10 @@
                                                              ((eq? (length (car v)) numb_args) v)
                                                               (else (loop (name (cdr var_l) (cdr val_l))))))))))
       (loop (caar (caddr class)) (cadar (caddr class))))))
+
+(define make-def-const
+  (lambda (env name)
+    (bind name '(() ((funcall super))) env)))
 
 (define add-exception-val
   (lambda (val env)

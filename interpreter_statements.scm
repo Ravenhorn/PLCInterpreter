@@ -171,6 +171,12 @@
           (cons (caddr stmnt) (cons (cadddr stmnt) (cons (lambda (v) (get-func-env v)) ;<--handle recursion
                                                          (cons (lambda (enviro) (get-func-class name enviro))'())))) env)))
 
+;(define pret-const-def
+;  (lambda (stmnt env name)
+;    (bind (cadr stmnt)
+;          (cons (caddr stmnt) (cons (cadddr stmnt) (cons (lambda (v) (get-func-env v))
+;                                                         (cons (lambda (enviro) (get-func-class name enviro)) '())))) (cdr env))))
+
 (define pret-funcall
   (lambda (stmnt env class instance k)
     (k (call/cc (lambda (ret)
