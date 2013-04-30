@@ -24,7 +24,7 @@ class B extends A {
   }
 
   static main() {
-	c = 9;
+	x = 9;
 	return c;
   }
 

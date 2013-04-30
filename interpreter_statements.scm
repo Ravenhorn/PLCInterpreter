@@ -3,15 +3,13 @@
 (define interpret-sl
   (lambda (ptree env class instance ret brk cont throw)
     (cond
-      ((null? ptree) (begin (display "done") (newline) env))
-      (else (begin (display "interpreting sl") (newline) (interpret-sl (cdr ptree) (interpret-stmnt (car ptree) env class instance ret brk cont throw) class instance ret brk cont throw))))))
+      ((null? ptree) env)
+      (else  (interpret-sl (cdr ptree) (interpret-stmnt (car ptree) env class instance ret brk cont throw) class instance ret brk cont throw)))))
 
 (define interpret-stmnt
   (lambda (stmnt env class instance ret brk cont throw)
-    (begin (display stmnt) (newline) (display env) (newline)
     (cond
-      ;((pair? (car stmnt)) (interpret-stmnt (car stmnt) env))
-      ((eq? '= (car stmnt)) (begin (display "car was =") (newline) (pret-assign stmnt env  class instance (lambda (val env) env))))
+      ((eq? '= (car stmnt)) (pret-assign stmnt env  class instance (lambda (val env) env)))
       ((eq? 'var (car stmnt)) (pret-declare stmnt env class instance))
       ((eq? 'if (car stmnt)) (pret-if stmnt env class instance ret brk cont throw))
       ((eq? 'return (car stmnt)) (ret (pret-return stmnt env class instance)))
@@ -22,7 +20,6 @@
       ((eq? 'funcall (car stmnt)) (pret-funcall stmnt env class instance (lambda (retval) env)))
       ((eq? 'try (car stmnt)) (pop-frame (pret-try stmnt env class instance ret brk cont throw)))
       ((eq? 'throw (car stmnt)) (throw (value (cadr stmnt) env class instance (lambda (val env) val))))
-      ;((eq? 'dot (car stmnt)) (pret-dot stmnt env class instance))
       (else (error "invalid parse tree"))))))
 
 (define pret-try 
@@ -114,15 +111,14 @@
       (else (bind (cadr stmnt) (value (cddr stmnt) env class instance (lambda (val enviro) val)) (value (caddr stmnt) env class instance (lambda (val2 enviro2) enviro2)))))))
 
 (define pret-assign
-  (lambda(stmnt env class instance k)
-    (begin (display "In pret-assign.") (newline) (display stmnt) (newline) (display env) (newline)
+  (lambda (stmnt env class instance k)
     (cond
       ((null? stmnt) (error "null arg passed to assign"))
       ((null? (cddr stmnt)) (error "no value to assign"))
       ((list? (cadr stmnt)) (pret-dot (cadr stmnt) env class instance (lambda (c i)
                                                                      (bind-deep (caddr (cadr stmnt)) (value (caddr stmnt) env class instance (lambda (e v) v)) (get-all-class-env (cadddr c) (car c)))))) ;add a cond for objects
       ((declared? (cadr stmnt) env class) (value (caddr stmnt) env class instance (lambda (val enviro) (k val (bind-deep (cadr stmnt) val (append (get-all-class-env (cadddr class) (car class)) enviro)) ))))
-      (else (begin (display "error on: ") (display stmnt) (newline) (error "variable not declared")))))))
+      (else (begin (display "error on: ") (display stmnt) (newline) (error "variable not declared"))))))
 
 
 (define pret-if
@@ -154,7 +150,7 @@
 (define value
   (lambda (expr env class instance k)
     ;(begin (display expr) (newline) (display env) (newline) (display class) (newline) (display instance) (newline) (display k) (newline)
-           (cond
+    (cond
       ((or (number? expr) (boolean? expr)) (k expr env))
       ((eq? expr 'false) (k #f env))
       ((eq? expr 'true) (k #t env))
@@ -223,8 +219,7 @@
 
 (define funcall-helper ;Interprets statement list of the function
   (lambda (stmnt closure env old_class old_instance new_class new_instance ret)
-    (begin (display 'funcall-helper:)(newline)(display stmnt)(newline)(display closure)(newline)(display env)(newline)
-     (interpret-sl (cadr closure) (setup-func-env stmnt closure env old_class old_instance) new_class new_instance ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop")) (lambda (v) (error "throw called outside try"))))))
+    (interpret-sl (cadr closure) (setup-func-env stmnt closure env old_class old_instance) new_class new_instance ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop")) (lambda (v) (error "throw called outside try")))))
     
 (define setup-func-env
   (lambda (stmnt closure env old_class old_instance)
@@ -250,11 +245,11 @@
 (define pret-const
   (lambda (name args class instance new-class new-instance)
     (begin (cond
-      ((null? (cadddr new-class)) (begin (display "cadddr was null") (newline)
+      ((null? (cadddr new-class))
        (get-inst-env (cadr (caadr new-class)) new-class new-instance 
                      (lambda (i) (get-const new-class args 
                                             (lambda (constr) 
-                                              (funcall-helper (cons 'funcall (cons name args)) constr (new-env) class instance new-class i (lambda (env) (error "ret")))))))))
+                                              (funcall-helper (cons 'funcall (cons name args)) constr (new-env) class instance new-class i (lambda (env) (error "ret"))))))))
       (else (begin (pret-const name (get-next-args new-class args) class instance (cadddr new-class) new-instance)
                           (get-inst-env (cadr (caadr new-class)) new-class new-instance 
                                         (lambda (i) (get-const new-class args
