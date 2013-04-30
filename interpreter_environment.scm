@@ -86,10 +86,10 @@
 (define bind-deep
   (lambda (var val env)
     (cond
-      ((null? env)     ;(begin (display "error on: ") (display var) (display val) (newline) (error "null environment")));shouldn't this error out?
-       (cond
-         ((declared-inst var class (lambda (k) k)) (begin (bind-instance var val class instance) env))
-         (else (error "do something"))))
+      ((null? env) (begin (display "error on: ") (display var) (display val) (newline) (error "null environment")));shouldn't this error out?
+       ;(cond
+         ;((declared-inst var class (lambda (k) k)) (begin (bind-instance var val class instance) env))
+         ;(else (error "do something"))))
       ((declared? var (cons (car env) '()) '()) (handle-box var val (car env) (lambda (val enviro) env)))
       (else (cons (car env) (bind-deep var val (cdr env)))))))
 
