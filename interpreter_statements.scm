@@ -20,7 +20,7 @@
       ((eq? 'funcall (car stmnt)) (pret-funcall stmnt env class instance (lambda (retval) env)))
       ((eq? 'try (car stmnt)) (pop-frame (pret-try stmnt env class instance ret brk cont throw)))
       ((eq? 'throw (car stmnt)) (throw (value (cadr stmnt) env class instance (lambda (val env) val))))
-      (else (error "invalid parse tree"))))))
+      (else (error "invalid parse tree")))))
 
 (define pret-try 
   (lambda (stmnt env class instance ret brk cont throw)
