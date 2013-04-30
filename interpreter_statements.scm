@@ -238,7 +238,7 @@
   (lambda (inst-exprs inst-vals class instance k)
     (cond
       ((null? inst-exprs) (k inst-vals))
-      (else (value (car inst-exprs) (new-env) class instance (lambda (v e) (get-inst-env (cdr inst-exprs) class cons  (lambda (i2) (k (append i2 i1))))))))))
+      (else (value (car inst-exprs) (new-env) class (unbox instance) (lambda (v e) (get-inst-env (cdr inst-exprs) class (set-box! instance (cons (cons (box v) (car (unbox instance))) (cdr (unbox instance)))) (lambda (v) (k (unbox v))))))))))
 
 (define getBool
   (lambda (op)
