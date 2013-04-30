@@ -121,7 +121,7 @@
                                  (declared-class? var class (lambda (w) 
                                                               (if w
                                                                   #t
-                                                                  (declared-inst? var class inst (lambda (x) x))))))))
+                                                                  (declared-inst? var class inst (lambda (x) x))))))))))
 
 (define declared-env?
   (lambda (var env k)
