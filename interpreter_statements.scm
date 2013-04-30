@@ -123,7 +123,7 @@
       (else (begin (display "error on: ") (display stmnt) (newline) (error "variable not declared"))))))
 
 (define pret-if
-  (lambda (stmnt env class instance ret brk cont trow)
+  (lambda (stmnt env class instance ret brk cont throw)
     (eval-if (cadr stmnt) env class instance
              (lambda (if1 enviro)
                (cond
@@ -208,7 +208,7 @@
 ;TODO finish class/instance binding once bind works for class instances
 (define assign-args
   (lambda (params args func_env old_env old_class old_instance)
-    (cond
+     (cond
       ((null? params) func_env)
       ;((list? (car params)) (handle-dot))
       ((eq? '& (car params)) (assign-args (cddr params) (cdr args) (bind-box (cadr params) (get-box-for-ref (car args) old_env) func_env) old_env old_class old_instance))

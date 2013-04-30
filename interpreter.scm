@@ -9,7 +9,7 @@
 (define interpret
   (lambda (filename mainclass)
     (call/cc (lambda (ret)
-               (interpret-class-sl (parser filename) (new-env) (lambda (v) v)))))) ; (interpret-sl (cadr (lookup 'main '() (lookup mainclass v '() '()) '())) v (lookup mainclass v '() '()) '() ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop")) (lambda (error) (error "throw called outside try")))))))))
+               (interpret-class-sl (parser filename) (new-env) (lambda (v) (interpret-sl (cadr (lookup 'main '() (lookup mainclass v '() '()) '())) v (lookup mainclass v '() '()) '() ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop")) (lambda (error) (error "throw called outside try")))))))))
 
 (define interpret-class-sl
   (lambda (ptree env k) 
@@ -34,8 +34,9 @@
 
 (define interpret-class-stmnt
   (lambda (stmnt env name)
+    ;(begin (display 'HEY) (display stmnt) (newline) (display env) (newline)
     (cond
-      ((eq? 'static-var (car stmnt)) (cons (pret-declare stmnt (car env) '() '()) (cdr env))) ;TODO are we sure about passing nulls to pret-declare?
+      ((eq? 'static-var (car stmnt)) (cons (pret-declare stmnt (car env) (faux-class (cadddr env)) '()) (cdr env))) ;TODO are we sure about passing nulls to pret-declare?
       ((eq? 'static-function (car stmnt)) ;A static function?
        (cond
          ((eq? (cadr stmnt) name) (insert-class-method (cons (caaddr env) (pret-func-def stmnt (cdaddr env) name)) env)) ;The constructor?
