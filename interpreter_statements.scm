@@ -150,7 +150,8 @@
                                  
 (define value
   (lambda (expr env class instance k)
-    (cond
+    ;(begin (display expr) (newline) (display env) (newline) (display class) (newline) (display instance) (newline) (display k) (newline)
+           (cond
       ((or (number? expr) (boolean? expr)) (k expr env))
       ((eq? expr 'false) (k #f env))
       ((eq? expr 'true) (k #t env))
@@ -160,7 +161,7 @@
       ((eq? 'funcall (car expr)) (k (pret-funcall expr env class instance (lambda (retval) retval)) env))
       ((eq? '! (car expr)) (value (cdr expr) env class instance (lambda (vals enviro) (k (not vals) enviro))))
       ((eq? 'dot (car expr)) (pret-dot expr env class instance (lambda (c i) (k  (lookup (caddr expr) '() c i) env))))
-      ((eq? 'new (car expr)) (k (new-inst (cadr expr) (cddr expr) env class instance)))
+      ((eq? 'new (car expr)) (k (new-inst (cadr expr) (cddr expr) env class instance) env))
       ((and (eq? '- (car expr)) (null? (cddr expr))) (value (cdr expr) env class instance (lambda (vals enviro) (k (* -1 vals) enviro))))
       (else (value (cadr expr) env class instance (lambda (val enviro) (value (caddr expr) enviro class instance 
                                              (lambda (val2 enviro2) (k ((getOp (car expr)) val val2) enviro2)))))))))
@@ -232,13 +233,25 @@
       ((null? (cadddr new-class)) (get-inst-env (cadr (caadr new-class)) new-class new-instance (lambda (i) (funcall-helper (cons 'funcall (cons name args)) (get-const new-class args) (new-env) class instance new-class i (lambda (env) (error "ret"))))))
       (else (begin (pret-const name args class instance (cadddr new-class) new-instance)
                           (get-inst-env (cadr (caadr new-class)) new-class new-instance (lambda (i) (funcall-helper (cons 'funcall (cons name args)) (get-const new-class args) (new-env) class instance new-class i (lambda (env) (error "ret"))))))))
-           new-instance)))
+           (begin (display 'new-inst:) (display new-instance) (newline) (cond
+             ((box? new-instance) (unbox new-instance))
+             (else new-instance))))))
 
 (define get-inst-env
   (lambda (inst-exprs class instance k)
     (cond
       ((null? inst-exprs) (k instance))
-      (else (value (car inst-exprs) (new-env) class (unbox instance) (lambda (v e) (get-inst-env (cdr inst-exprs) class (set-box! instance (cons (cons (box v) (car (unbox instance))) (cdr (unbox instance)))) (lambda (v) (k (unbox v))))))))))
+      (else (value 
+             (unbox (car inst-exprs))
+             (new-env)
+             class
+             (unbox instance)
+             (lambda (v e)
+               (get-inst-env
+                (cdr inst-exprs)
+                class
+                (begin (display 'inst:) (display instance) (newline) (display v) (newline) (set-box! instance (cons (cons (box v) (car (unbox instance))) (cdr (unbox instance)))) instance)
+                (lambda (r) (begin (display 'r:) (display r) (newline) (k (unbox r)))))))))))
 
 (define getBool
   (lambda (op)
