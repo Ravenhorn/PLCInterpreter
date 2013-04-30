@@ -229,15 +229,15 @@
 (define pret-const
   (lambda (name args class instance new-class new-instance)
     (begin (cond
-      ((null? (cadddr new-class)) (get-inst-env (cadr (caadr new-class)) '() new-class new-instance (lambda (i) (funcall-helper (cons 'funcall (cons name args)) (get-const new-class args) (new-env) class instance new-class i (lambda (env) (error "ret"))))))
+      ((null? (cadddr new-class)) (get-inst-env (cadr (caadr new-class)) new-class new-instance (lambda (i) (funcall-helper (cons 'funcall (cons name args)) (get-const new-class args) (new-env) class instance new-class i (lambda (env) (error "ret"))))))
       (else (begin (pret-const name args class instance (cadddr new-class) new-instance)
-                          (get-inst-env (cadr (caadr new-class)) '() new-class new-instance (lambda (i) (funcall-helper (cons 'funcall (cons name args)) (get-const new-class args) (new-env) class instance new-class i (lambda (env) (error "ret"))))))))
+                          (get-inst-env (cadr (caadr new-class)) new-class new-instance (lambda (i) (funcall-helper (cons 'funcall (cons name args)) (get-const new-class args) (new-env) class instance new-class i (lambda (env) (error "ret"))))))))
            new-instance)))
 
 (define get-inst-env
-  (lambda (inst-exprs inst-vals class instance k)
+  (lambda (inst-exprs class instance k)
     (cond
-      ((null? inst-exprs) (k inst-vals))
+      ((null? inst-exprs) (k instance))
       (else (value (car inst-exprs) (new-env) class (unbox instance) (lambda (v e) (get-inst-env (cdr inst-exprs) class (set-box! instance (cons (cons (box v) (car (unbox instance))) (cdr (unbox instance)))) (lambda (v) (k (unbox v))))))))))
 
 (define getBool
