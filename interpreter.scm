@@ -9,17 +9,17 @@
 (define interpret
   (lambda (filename mainclass)
     (call/cc (lambda (ret)
-               (interpret-class-sl (parser filename) (new-env) (lambda (v) (interpret-sl (cadr (lookup 'main '() (lookup mainclass v '() '()) '())) v (lookup mainclass v '() '()) '() ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop")) (lambda (error) (error "throw called outside try")))))))))
+               (interpret-class-sl (parser filename) (new-env) (lambda (v) v)))))); (interpret-sl (cadr (lookup 'main '() (lookup mainclass v '() '()) '())) v (lookup mainclass v '() '()) '() ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop")) (lambda (error) (error "throw called outside try")))))))))
 
 (define interpret-class-sl
   (lambda (ptree env k) 
     (cond
       ((null? ptree) (k env))
-      (else (interpret-class-sl (cdr ptree) (bind (cadar ptree) (cons (interpret-class-body (get-class-body (car ptree)) (new-class-env (begin 
+      (else (interpret-class-sl (cdr ptree) (bind (cadar ptree) (interpret-class-body (get-class-body (car ptree)) (new-class-env (begin 
                                                                                                                                     (cond
                                                                                                                                       ((null? (get-parent-name (car ptree))) '())
                                                                                                                                       (else (lookup (get-parent-name (car ptree)) env '() '())))) (get-class-name (car ptree)))                                                                                      
-                                                                                                                                  (get-class-name (car ptree))) env) (get-class-name (car ptree))) (lambda (v) (k v)))))))
+                                                                                                                                  (get-class-name (car ptree))) env) (lambda (v) (k v)))))))
 
 ;(define interpret
  ; (lambda (filename)

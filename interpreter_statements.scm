@@ -193,6 +193,10 @@
     (lookup-method name class (length args))))
     ;(lookup name '() class '())))
 
+(define get-const
+  (lambda (class args)
+    (lookup-method (car (cddddr class)) class args)))
+
 (define funcall-helper ;Interprets statement list of the function
   (lambda (stmnt closure env old_class old_instance new_class new_instance ret)
      (interpret-sl (cadr closure) (setup-func-env stmnt closure env old_class old_instance) new_class new_instance ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop")) (lambda (v) (error "throw called outside try")))))
@@ -216,14 +220,14 @@
 
 (define new-inst
   (lambda (name args env class instance)
-    (pret-const name args (get-own-class) (box (cons '() (cons ))))
+    (pret-const name args (get-own-class) (box (cons '() (cons ))))))
 
 (define pret-const
   (lambda (args class instance)
     (cond
       ((null? (cadddr class)) (interpret-sl (cadr (get-const class args)) (new-env) class (get-inst-env (cadadr class) '() class instance) (error "ret") (error "brk") (error "cont") (error "throw"))) ;pretend that this returns the instance
       (else (begin (pret-const args (cadddr class) instance)
-                          ((interpret-sl (cadr (get-const class args)) (new-env) class (get-inst-env (cadadr class) '() class instance) (error "ret") (error "brk") (error "cont") (error "throw")))))))))
+                          ((interpret-sl (cadr (get-const class args)) (new-env) class (get-inst-env (cadadr class) '() class instance) (error "ret") (error "brk") (error "cont") (error "throw"))))))))
 
 (define get-inst-env
   (lambda (inst-exprs inst-vals class instance k)
