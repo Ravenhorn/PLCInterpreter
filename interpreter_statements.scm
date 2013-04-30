@@ -237,9 +237,9 @@
       ((null? (cadddr new-class)) (get-inst-env (cadr (caadr new-class)) new-class new-instance (lambda (i) (funcall-helper (cons 'funcall (cons name args)) (get-const new-class args) (new-env) class instance new-class i (lambda (env) (error "ret"))))))
       (else (begin (pret-const name args class instance (cadddr new-class) new-instance)
                           (get-inst-env (cadr (caadr new-class)) new-class new-instance (lambda (i) (funcall-helper (cons 'funcall (cons name args)) (get-const new-class args) (new-env) class instance new-class i (lambda (env) (error "ret"))))))))
-           (begin (display 'new-inst:) (display new-instance) (newline) (cond
+           (cond
              ((box? new-instance) (unbox new-instance))
-             (else new-instance))))))
+             (else new-instance)))))
 
 (define get-inst-env
   (lambda (inst-exprs class instance k)
@@ -254,8 +254,8 @@
                (get-inst-env
                 (cdr inst-exprs)
                 class
-                (begin (display 'inst:) (display instance) (newline) (display v) (newline) (set-box! instance (cons (cons (box v) (car (unbox instance))) (cdr (unbox instance)))) instance)
-                (lambda (r) (begin (display 'r:) (display r) (newline) (k (unbox r)))))))))))
+                (begin (set-box! instance (cons (cons (box v) (car (unbox instance))) (cdr (unbox instance)))) instance)
+                (lambda (r) (k (unbox r))))))))))
 
 (define getBool
   (lambda (op)
