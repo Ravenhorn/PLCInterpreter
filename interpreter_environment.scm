@@ -175,7 +175,7 @@
                      (cond
                         ((null? env) (loop var_l val_l))
                         (else (frame (cdr env) (append (caar env) var_l) (append (cadar env) val_l)))))))
-      (begin (display 'HEY) (newline) (display name) (newline) (display class) (newline) (display numb_args) (newline) (frame  (caddr class) '() '())))))
+      (frame  (caddr class) '() '()))))
 
 (define make-def-const
   (lambda (env name)
