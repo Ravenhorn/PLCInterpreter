@@ -243,7 +243,7 @@
   (lambda (name args class instance new-class new-instance)
     (begin (cond
       ((null? (cadddr new-class)) (get-inst-env (cadr (caadr new-class)) new-class new-instance (lambda (i) (get-const new-class args (lambda (constr) (funcall-helper (cons 'funcall (cons name args)) constr (new-env) class instance new-class i (lambda (env) (error "ret"))))))))
-      (else (begin (pret-const name (get-next-args new-class args) class instance (cadddr new-class) new-instance)
+      (else (begin (pret-const name (begin (display (get-next-args new-class args)) (get-next-args new-class args)) class instance (cadddr new-class) new-instance)
                           (get-inst-env (cadr (caadr new-class)) new-class new-instance (lambda (i) (get-const new-class args (lambda (constr) (funcall-helper (cons 'funcall (cons name args)) constr (new-env) class instance new-class i (lambda (env) (error "ret"))))))))))
            (cond
              ((box? new-instance) (unbox new-instance))
