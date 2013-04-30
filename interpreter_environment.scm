@@ -173,7 +173,7 @@
 
 (define make-def-const
   (lambda (env name)
-    (bind name '(() ((funcall super))) env)))
+    (bind name '(() ()) env)))
 
 (define add-exception-val
   (lambda (val env)

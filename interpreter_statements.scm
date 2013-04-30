@@ -228,10 +228,11 @@
 
 (define pret-const
   (lambda (name args class instance new-class new-instance)
-    (cond
-      ((null? (cadddr new-class)) (get-inst-env (cadr (caadr new-class)) '() new-class new-instance (lambda (i) (funcall-helper (cons 'funcall (cons name args)) (get-const class args) (new-env) class instance new-class i (error "ret") (error "brk") (error "cont") (error "throw"))))) ;pretend that this returns the instance
-      (else (begin (pret-const name args class instance (cadddr class) new-instance)
-                          (get-inst-env (cadr (caadr new-class)) '() new-class new-instance (lambda (i) (funcall-helper (cons 'funcall (cons name args)) (get-const class args) (new-env) class instance new-class i (error "ret") (error "brk") (error "cont") (error "throw")))))))))
+    (begin (cond
+      ((null? (cadddr new-class)) (get-inst-env (cadr (caadr new-class)) '() new-class new-instance (lambda (i) (funcall-helper (cons 'funcall (cons name args)) (get-const new-class args) (new-env) class instance new-class i (error "ret") (error "brk") (error "cont") (error "throw")))))
+      (else (begin (pret-const name args class instance (cadddr new-class) new-instance)
+                          (get-inst-env (cadr (caadr new-class)) '() new-class new-instance (lambda (i) (funcall-helper (cons 'funcall (cons name args)) (get-const new-class args) (new-env) class instance new-class i (error "ret") (error "brk") (error "cont") (error "throw")))))))
+           new-instance)))
 
 (define get-inst-env
   (lambda (inst-exprs inst-vals class instance k)
