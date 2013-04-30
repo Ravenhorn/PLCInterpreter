@@ -12,7 +12,7 @@ class A {
 }
 
 class B extends A {
-  static var x = 2;
+  var x = 2;
   static var y = 30;
 
   static add(a,b) {
@@ -20,6 +20,7 @@ class B extends A {
   }
 
   static main() {
-    return add(x,y) + add(x,x,x);
+    var a = new B();
+	return a.x;
   }
 }
