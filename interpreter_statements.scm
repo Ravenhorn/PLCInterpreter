@@ -123,7 +123,7 @@
       (else (begin (display "error on: ") (display stmnt) (newline) (error "variable not declared"))))))
 
 (define pret-if
-  (lambda (stmnt env class instance ret brk cont throw)
+  (lambda (stmnt env class instance ret brk cont trow)
     (eval-if (cadr stmnt) env class instance
              (lambda (if1 enviro)
                (cond
@@ -212,7 +212,7 @@
 ;TODO finish class/instance binding once bind works for class instances
 (define assign-args
   (lambda (params args func_env old_env old_class old_instance)
-     (cond
+    (cond
       ((null? params) func_env)
       ;((list? (car params)) (handle-dot))
       ((eq? '& (car params)) (assign-args (cddr params) (cdr args) (bind-box (cadr params) (get-box-for-ref (car args) old_env) func_env) old_env old_class old_instance))
@@ -220,20 +220,20 @@
 
 (define new-inst
   (lambda (name args env class instance)
-    (pret-const name args (get-own-class) (box (cons '() (cons ))))))
+    (pret-const name args (get-own-class) (box (cons '() (cons name '()))))))
 
 (define pret-const
   (lambda (args class instance)
     (cond
-      ((null? (cadddr class)) (interpret-sl (cadr (get-const class args)) (new-env) class (get-inst-env (cadadr class) '() class instance) (error "ret") (error "brk") (error "cont") (error "throw"))) ;pretend that this returns the instance
+      ((null? (cadddr class)) (get-inst-env (cadadr class) class instance (lambda (i) (interpret-sl (cadr (get-const class args)) (new-env) class i (error "ret") (error "brk") (error "cont") (error "throw"))))) ;pretend that this returns the instance
       (else (begin (pret-const args (cadddr class) instance)
-                          ((interpret-sl (cadr (get-const class args)) (new-env) class (get-inst-env (cadadr class) '() class instance) (error "ret") (error "brk") (error "cont") (error "throw"))))))))
+                          (get-inst-env (cadadr class) class instance (lambda (i) (interpret-sl (cadr (get-const class args)) (new-env) class i (error "ret") (error "brk") (error "cont") (error "throw")))))))))
 
 (define get-inst-env
-  (lambda (inst-exprs inst-vals class instance k)
+  (lambda (inst-exprs class instance k)
     (cond
-      ((null? inst-exprs) (k inst-vals))
-      (else (value (car inst-exprs) (new-env) class instance (lambda (v e) (get-inst-env (cdr inst-exprs) class cons  (lambda (i2) (k (append i2 i1))))))))))
+      ((null? inst-exprs) (k instance))
+      (else (value (car inst-exprs) (new-env) class (unbox instance) (lambda (v e) (get-inst-env (cdr inst-exprs) class (set-box! instance (cons (cons (box v) (car (unbox instance))) (cdr (unbox instance)))) (lambda (v) (k (unbox v)))))))))))
 
 (define getBool
   (lambda (op)
