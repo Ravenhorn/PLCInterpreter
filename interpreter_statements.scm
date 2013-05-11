@@ -1,4 +1,4 @@
-;(load "interpreter_environment.scm")
+(load "interpreter_environment.scm")
 
 (define interpret-sl
   (lambda (ptree env class instance ret brk cont throw)
@@ -66,7 +66,7 @@
     (cond
       ((eq? 'super lhs) (k (get-parent class) instance))
       ((eq? 'this lhs) (k class instance)) ; handle this for next time
-      (else (handle-left-helper (lookup lhs env class instance) env k)))))
+      (else (value lhs env class instance (lambda (v e) (handle-left-helper v e k)))))))
 
 (define get-parent
   (lambda (class)
