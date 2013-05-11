@@ -1,4 +1,4 @@
-(load "interpreter_environment.scm")
+;(load "interpreter_environment.scm")
 
 (define interpret-sl
   (lambda (ptree env class instance ret brk cont throw)
@@ -116,8 +116,8 @@
       ((null? stmnt) (error "null arg passed to assign"))
       ((null? (cddr stmnt)) (error "no value to assign"))
       ((list? (cadr stmnt)) (pret-dot (cadr stmnt) env class instance (lambda (c i)
-                                                                     (bind-deep (caddr (cadr stmnt)) (value (caddr stmnt) env class instance (lambda (e v) v)) (get-all-class-env (cadddr c) (car c)))))) ;add a cond for objects
-      ((declared? (cadr stmnt) env class) (value (caddr stmnt) env class instance (lambda (val enviro) (k val (bind-deep (cadr stmnt) val (append (get-all-class-env (cadddr class) (car class)) enviro)) ))))
+                                                                     (bind-deep (caddr (cadr stmnt)) (value (caddr stmnt) env class instance (lambda (v e) v)) (cons(get-inst-enviro c i) (get-all-class-env (cadddr c) (car c))))))) ;add a cond for objects
+      ((declared? (cadr stmnt) env class) (value (caddr stmnt) env class instance (lambda (val enviro) (k val (bind-deep (cadr stmnt) val (cons (get-inst-enviro class instance) (append (get-all-class-env (cadddr class) (car class)) enviro)))))))
       (else (begin (display "error on: ") (display stmnt) (newline) (error "variable not declared"))))))
 
 
@@ -151,6 +151,7 @@
   (lambda (expr env class instance k)
     ;(begin (display expr) (newline) (display env) (newline) (display class) (newline) (display instance) (newline) (display k) (newline)
     (cond
+      ((null? expr) (k '() env))
       ((or (number? expr) (boolean? expr)) (k expr env))
       ((eq? expr 'false) (k #f env))
       ((eq? expr 'true) (k #t env))
@@ -185,7 +186,7 @@
                     (else
                      (cond
                        ((null? instance) (funcall-helper stmnt (get-method (cadr stmnt) class (cddr stmnt)) env class instance ((cadddr (get-method (cadr stmnt) class (cddr stmnt))) env) '() ret))
-                        (else (funcall-helper stmnt (get-method (cadr stmnt) (get-instance-class instance env) (cddr stmnt)) env class instance (get-instance-class instance) instance ret))))))))))
+                        (else (funcall-helper stmnt (get-method (cadr stmnt) (get-instance-class instance env) (cddr stmnt)) env class instance (get-instance-class instance env) instance ret))))))))))
                ;(interpret-sl (cadr (lookup (cadr stmnt) env class instance)) (setup-func-env stmnt env class instance) class instance ret (lambda (env) (error "break called outside of a loop")) (lambda (env)(error "continue called outside of a loop"))))))))
 
 (define get-instance-class
@@ -249,12 +250,12 @@
        (get-inst-env (cadr (caadr new-class)) new-class new-instance 
                      (lambda (i) (get-const new-class args 
                                             (lambda (constr) 
-                                              (funcall-helper (cons 'funcall (cons name args)) constr (new-env) class instance new-class i (lambda (env) (error "ret"))))))))
+                                              (funcall-helper (cons 'funcall (cons name args)) constr (new-env) class instance new-class (cond ((box? i) (unbox i)) (else i)) (lambda (env) (error "ret"))))))))
       (else (begin (pret-const name (get-next-args new-class args) class instance (cadddr new-class) new-instance)
                           (get-inst-env (cadr (caadr new-class)) new-class new-instance 
                                         (lambda (i) (get-const new-class args
                                                                (lambda (constr)
-                                                                 (funcall-helper (cons 'funcall (cons name args)) constr (new-env) class instance new-class i (lambda (env) (error "ret"))))))))))
+                                                                 (funcall-helper (cons 'funcall (cons name args)) constr (new-env) class instance new-class (cond ((box? i) (unbox i)) (else i)) (lambda (env) (error "ret"))))))))))
            (cond
              ((box? new-instance) (unbox new-instance))
              (else new-instance)))))
@@ -273,7 +274,7 @@
                 (cdr inst-exprs)
                 class
                 (begin (set-box! instance (cons (cons (box v) (car (unbox instance))) (cdr (unbox instance)))) instance)
-                (lambda (r) (k (unbox r))))))))))
+                (lambda (r) (k r)))))))))
 
 (define getBool
   (lambda (op)

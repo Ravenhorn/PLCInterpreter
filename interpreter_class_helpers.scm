@@ -35,3 +35,10 @@
 (define faux-class
   (lambda (parent)
     (cons '((()())) (cons '((()())) (cons '((() ()))  (cons parent '()))))))
+
+(define get-inst-enviro
+  (lambda (c i)
+    (cond
+      ((null? c) '(()()))
+      ((null? i) '(()()))
+      (else (cons (get-instance-var-names c) (list (car i)))))))
